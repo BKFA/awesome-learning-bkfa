@@ -43,3 +43,7 @@
     * Lấy mẫu và dùng phương pháp phân cấp để xác định các tâm khởi tạo
     * Chọn nhiều hơn k tâm rồi lựa chọn thu gọn k tâm tách biệt
     * Phân cụm với số cụm lớn rồi thực hiện phân cụm phân cấp
+
+* Reference
+    * Machine Learning cơ bản
+    * Atrifical Intelligence for Humans Vol 1: Fundamental 
