@@ -1,0 +1,239 @@
+1. Introduction
+2. Patterns for Cleaner Python (Viết mã nguồn Python sạch hơn)
+2.1. Covering Your A** With Assertions
+Sử dụng câu lệnh assert để phát hiện các lỗi tiềm ẩn và debug chương trình khi viết mã nguồn Python. Thay vì như try ... catch ... finallly thực hiện một hành động sau khi xảy ra exception, assert chỉ in lỗi. Các lỗi này đều do ta định nghĩa trước.
+Cú pháp: assert_stmt ::= "assert" expression1 ["," expression2]
+Hiểu:
+if __debug__:
+	if not expression1:
+		raise AssertionError(expression2)
+2.2. Complacent Comma Placement 
+Đặt dấy phẩy khác đi. Thay vì thường đặt:
+>>> names = ['Alice', 'Bob', 'Dilbert']
+Ta sẽ đặt:
+>>> names = [
+... 'Alice',
+... 'Bob',
+... 'Dilbert'
+... ]
+Cách đặt này có lợi ích là mã nguồn nhìn rõ ràng hơn, bớt xẩy ra lỗi hơn.
+2.3. Context Managers and the 'with' Statement
+with trong python là một câu lệnh rất hữu dụng. Nó giúp lập trình viên quản lý ngữ cảnh tốt hơn. Best-pratices:
+# Harmful:
+some_lock.acquire()
+try:
+	# Do something...
+finally:
+	some_lock.release()
+
+# Better:
+with some_lock:
+	# Do something...
+2.4. Underscores, Dunders, and More
+Dấu gạch dưới có ảnh hưởng gì đến việc đặt tên biến. Trong python, ta quan tâm đến một số naming convension sau đây:
+Single Leading Underscore: _var
+Single Trailing Underscore: var_
+Double Leading Underscore: __var
+Double Leading and Trailing Underscore: __var__
+Single Underscore: _
+Lưu ý các cách đặt tên này đều dựa trên PEP8 là một chuẩn chính thống viết mã nguồn Python.
+a) Dấu gạch dưới ở đầu _var:
+Nhìn vào ví dụ dưới đây:
+class Test:
+	def __init__(self):
+		self.foo = 11
+		self._bar = 23
+>>> t = Test()
+>>> t.foo
+11
+>>> t._bar
+23
+Không có gì đặc biệt lắm. Dấu gạch dưới ở đầu tên biến không ảnh hưởng gì.
+Ví dụ 2: 
+# my_module.py:
+def external_func():
+	return 23
+def _internal_func():
+	return 42
+
+>>> from my_module import *
+>>> external_func()
+23
+>>> _internal_func()
+NameError: "name '_internal_func' is not defined"
+Như vậy, khi đặt tên hàm ta tránh đặt dấu gạch dưới ở đầu tên hàm. Các module có import module có tên hàm chứa dấu gạch dưới ở đầu sẽ gọi được hàm này.
+b) 1 dấu gạch dưới ở cuối var_:
+Dấu gạch dưới ở ví trí này không có gì đặc biệt cần lưu ý, tuy nhiên nếu ta cần tránh các tên đặc biệt khi đặt tên thì có thể sử dụng dấu ở vị trí này, ví dụ:
+>>> def make_object(name, class):
+SyntaxError: "invalid syntax"
+>>> def make_object(name, class_):
+...
+pass
+c) Hai dấu gạch dưới liên tiếp ở đầu __var:
+Tiền tố gạch dưới đôi dùng để viết lại tên thuộc tính mà tránh xung đột với lớp con. Điều này gọi là name mangling. Ví dụ:
+class Test:
+	def __init__(self):
+		self.foo = 11
+		self._bar = 23
+		self.__baz = 23
+>>> t = Test()
+Ta sử dụng hàm build-in dir để kiểm tra các thuộc tính của đối tượng t:
+>>> dir(t)
+['_Test__baz', '__class__', '__delattr__', '__dict__',
+'__dir__', '__doc__', '__eq__', '__format__', '__ge__',
+'__getattribute__', '__gt__', '__hash__', '__init__',
+'__le__', '__lt__', '__module__', '__ne__', '__new__',
+'__reduce__', '__reduce_ex__', '__repr__',
+'__setattr__', '__sizeof__', '__str__',
+'__subclasshook__', '__weakref__', '_bar', 'foo']
+Chúng ta đều nhìn thấy foo, _bar nhưng không thấy __baz? nếu để ý kĩ chúng ta thấy có _Test__baz, đây thực chất là __baz của chúng ta nhưng đã được trình dịch biến đổi (name mangling) để tránh xung đột tên với lớp con.
+Rõ hơn:
+# Lớp ExtendedTest kế thừa từ lớp Test
+class ExtendedTest(Test):
+	def __init__(self):
+		super().__init__()
+		self.foo = 'overridden'
+		self._bar = 'overridden'
+		self.__baz = 'overridden'
+# Try more
+>>> t2 = ExtendedTest()
+>>> t2.foo
+'overridden'
+>>> t2._bar
+'overridden'
+>>> t2.__baz
+AttributeError:
+"'ExtendedTest' object has no attribute '__baz'"
+??? Where is our '__baz'?
+>>> dir(t2)
+['_ExtendedTest__baz', '_Test__baz', '__class__',
+'__delattr__', '__dict__', '__dir__', '__doc__',
+'__eq__', '__format__', '__ge__', '__getattribute__',
+'__gt__', '__hash__', '__init__', '__le__', '__lt__',
+'__module__', '__ne__', '__new__', '__reduce__',
+'__reduce_ex__', '__repr__', '__setattr__',
+'__sizeof__', '__str__', '__subclasshook__',
+'__weakref__', '_bar', 'foo', 'get_vars']
+Ta thấy có thuộc tính '_ExtendedTest__baz', '_Test__baz'.
+>>> t2._ExtendedTest__baz
+'overridden'
+>>> t2._Test__baz
+42
+Oh, kết luận tiền tố dấu gạch dưới đôi trong tên biến thay đổi tùy thuộc vào tên lớp.
+Name mangling có thể được gọi thông qua phương thức của lớp.
+class ManglingTest:
+	def __init__(self):
+		self.__mangled = 'hello'
+	def get_mangled(self):
+		return self.__mangled
+>>> ManglingTest().get_mangled()
+'hello'
+>>> ManglingTest().__mangled
+AttributeError:
+"'ManglingTest' object has no attribute '__mangled'"
+Name mangling đối với phương thức?
+class MangledMethod:
+	def __method(self):
+		return 42
+	def call_it(self):
+		return self.__method()
+>>> MangledMethod().__method()
+AttributeError:
+"'MangledMethod' object has no attribute '__method'"
+>>> MangledMethod().call_it()
+42
+Một trường hợp đặc biệt khác của name mangling:
+_MangledGlobal__mangled = 23
+class MangledGlobal:
+	def test(self):
+		return __mangled
+>>> MangledGlobal().test()
+23
+Ở đây, _MangledGlobal__mangled là biến global, thuộc tính __mangled của lớp MangledGlobal chưa được gán nhưng lại mang giá trị của _MangledGlobal__mangled. Điều này là do trình dịch của python đã tham chiếu thuộc tính này với biến global cùng tên.
+Tên thuộc tính với tiền tố '__' cho chúng ta nhiều kết quả thú vị. Các lập trình viên Python thường gọi tiền tố này là dunder, nếu bạn đã từng nghe qua dunder mà lúng túng không biết nó là gì thì giờ đã có câu trả lời rồi đó :)  
+d) Tiền tố và hậu tố __var__:
+Thường dùng cho các build-in methods hay các thuộc tính có tính chất đặc biệt
+e) Một dấu _:
+Đây là biến đặc biệt trong Python. Mặc định chứa kết quả của phép tính trước đó.
+>>> 20 + 3
+23
+>>> _
+23
+>>> print(_)
+23
+>>> list()
+[]
+>>> _.append(1)
+>>> _.append(2)
+>>> _.append(3)
+>>> _
+[1, 2, 3]
+Awesome phải không? :0
+2.5. A Shocking Truth about String Formatting
+Phần này trình bày các cách biểu diễn 1 chuỗi trong Python, hứa hẹn sẽ mang lại nhiều điều thú vị
+Giả sử, ta có 2 biến:
+>>> errno = 50159747054
+>>> name = 'Bob'
+Làm sao để từ 2 biến này ta output một chuỗi
+'Hey Bob, there is a 0xbadc0ffee error!'
+a) 'Old style' in python
+>>> 'Hey %s, there is a 0x%x error!' % (name, errno)
+'Hey Bob, there is a 0xbadc0ffee error!'
+>>> 'Hey %(name)s, there is a 0x%(errno)x error!' % {
+... "name": name, "errno": errno }
+'Hey Bob, there is a 0xbadc0ffee error!'
+Với %s và %x là format của biến. Đây là cách phổ biến rồi đúng không? 
+b) 'New style' in python
+Trong python3 giới thiệu một cách viết mới hơn:
+>>> 'Hey {name}, there is a 0x{errno:x} error!'.format(
+... name=name, errno=errno)
+'Hey Bob, there is a 0xbadc0ffee error!'
+Hàm str.format() là hàm mặc định trong python, bạn có thể xem document về nó tại Python Docs.
+c) Nội suy chuỗi (python 3.6+)
+Từ python trở đi giới thiệu một cách viết mới hơn nữa:
+>>> f'Hello, {name}!'
+'Hello, Bob!'
+>>> a = 5
+>>> b = 10
+>>> f'Five plus ten is {a + b} and not {2 * (a + b)}.'
+'Five plus ten is 15 and not 30.'
+>>> f"Hey {name}, there's a {errno:#x} error!"
+"Hey Bob, there's a 0xbadc0ffee error!"
+>>> def greet(name, question):
+... return f"Hello, {name}! How's it {question}?"
+>>> greet('Bob', 'going')
+"Hello, Bob! How's it going?" 
+d) Template string
+Trong python, ta có thể tạo ra template cho chuỗi bằng cách import module Template.
+>>> from string import Template
+>>> t = Template('Hey, $name!')
+>>> t.substitute(name=name)
+'Hey, Bob!'
+>>> templ_string = 'Hey $name, there is a $error error!'
+>>> Template(templ_string).substitute(
+... name=name, error=hex(errno))
+'Hey Bob, there is a 0xbadc0ffee error!'
+Ở trên đã trình bày các cách viết một chuỗi trong python :) Bạn có thể cảm thấy lúng túng khi chọn một cách cho mình, điều quan trọng là bạn cảm thấy cách viết nào phù hợp hơn thôi. 
+2.6. 'The Zen of Python' Easter Egg 
+Khi bạn học Tiếng Việt, điều bạn cần làm đầu tiên là học thuộc bảng chữ cái. Vậy để trở thành coder tốt hơn với python, đây là những gì bạn cần:
+>>> import this
+The Zen of Python, by Tim Peters
+Beautiful is better than ugly.
+Explicit is better than implicit.
+Simple is better than complex.
+Complex is better than complicated.
+Flat is better than nested.
+Sparse is better than dense.
+Readability counts.
+Special cases aren’t special enough to break the rules.
+Although practicality beats purity.
+Errors should never pass silently.
+Unless explicitly silenced.
+In the face of ambiguity, refuse the temptation to guess.
+There should be one—and preferably only one—obvious way to do it.
+Although that way may not be obvious at first unless you’re Dutch.
+Now is better than never.
+Although never is often better than right now.
+If the implementation is hard to explain, it’s a bad idea.
+If the implementation is easy to explain, it may be a good idea.
+Namespaces are one honking great idea—let’s do more of those!
