@@ -1,14 +1,17 @@
-1. Introduction
-2. Patterns for Cleaner Python (Viết mã nguồn Python sạch hơn)
-2.1. Covering Your A** With Assertions
-Sử dụng câu lệnh assert để phát hiện các lỗi tiềm ẩn và debug chương trình khi viết mã nguồn Python. Thay vì như try ... catch ... finallly thực hiện một hành động sau khi xảy ra exception, assert chỉ in lỗi. Các lỗi này đều do ta định nghĩa trước.
+Patterns for Cleaner Python 
+
+1. Covering Your A** With Assertions
+Sử dụng câu lệnh assert để phát hiện các lỗi tiềm ẩn và debug chương trình khi viết mã nguồn Python. 
+Thay vì như try ... catch ... finallly thực hiện một hành động sau khi xảy ra exception, assert chỉ in lỗi. 
+Các lỗi này đều do ta định nghĩa trước.
 Cú pháp: assert_stmt ::= "assert" expression1 ["," expression2]
 Hiểu:
 if __debug__:
 	if not expression1:
 		raise AssertionError(expression2)
-2.2. Complacent Comma Placement 
-Đặt dấy phẩy khác đi. Thay vì thường đặt:
+
+2. Complacent Comma Placement 
+Thay vì thường đặt dấu phẩy:
 >>> names = ['Alice', 'Bob', 'Dilbert']
 Ta sẽ đặt:
 >>> names = [
@@ -17,7 +20,8 @@ Ta sẽ đặt:
 ... 'Dilbert'
 ... ]
 Cách đặt này có lợi ích là mã nguồn nhìn rõ ràng hơn, bớt xẩy ra lỗi hơn.
-2.3. Context Managers and the 'with' Statement
+
+3. Context Managers and the 'with' Statement
 with trong python là một câu lệnh rất hữu dụng. Nó giúp lập trình viên quản lý ngữ cảnh tốt hơn. Best-pratices:
 # Harmful:
 some_lock.acquire()
@@ -29,7 +33,8 @@ finally:
 # Better:
 with some_lock:
 	# Do something...
-2.4. Underscores, Dunders, and More
+
+4. Underscores, Dunders, and More
 Dấu gạch dưới có ảnh hưởng gì đến việc đặt tên biến. Trong python, ta quan tâm đến một số naming convension sau đây:
 Single Leading Underscore: _var
 Single Trailing Underscore: var_
@@ -169,7 +174,8 @@ e) Một dấu _:
 >>> _
 [1, 2, 3]
 Awesome phải không? :0
-2.5. A Shocking Truth about String Formatting
+
+5. A Shocking Truth about String Formatting
 Phần này trình bày các cách biểu diễn 1 chuỗi trong Python, hứa hẹn sẽ mang lại nhiều điều thú vị
 Giả sử, ta có 2 biến:
 >>> errno = 50159747054
@@ -214,7 +220,8 @@ Trong python, ta có thể tạo ra template cho chuỗi bằng cách import mod
 ... name=name, error=hex(errno))
 'Hey Bob, there is a 0xbadc0ffee error!'
 Ở trên đã trình bày các cách viết một chuỗi trong python :) Bạn có thể cảm thấy lúng túng khi chọn một cách cho mình, điều quan trọng là bạn cảm thấy cách viết nào phù hợp hơn thôi. 
-2.6. 'The Zen of Python' Easter Egg 
+
+6. 'The Zen of Python' Easter Egg 
 Khi bạn học Tiếng Việt, điều bạn cần làm đầu tiên là học thuộc bảng chữ cái. Vậy để trở thành coder tốt hơn với python, đây là những gì bạn cần:
 >>> import this
 The Zen of Python, by Tim Peters
