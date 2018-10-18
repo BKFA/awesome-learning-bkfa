@@ -1,0 +1,307 @@
+3. Effective Functions
+
+3.1. Python's Functions are First-class
+Python là ngôn ngữ thuần hướng đối tượng, moi thứ trong Python đều là đối tượng, kể cả hàm (function).
+# định nghĩa hàm yell trả về một chuỗi viết hoa
+def yell(text):
+	return text.upper() + '!'
+# gán hàm bark bằng hàm yell
+>>> bark = yell
+# gọi hàm bark, ta được kết quả như gọi hàm yell
+>>> bark('woof')
+'WOOF!'
+# thuộc tính _name_ của đối tượng bark là tên hàm yell
+>>> bark.__name__
+'yell'
+Chúng ta có thể lưu vào các cấu trúc dữ liệu như mảng, danh sách.
+# các hàm có thể được lưu vào các cấu trúc dữ liệu như danh sách
+>>> funcs = [bark, str.lower, str.capitalize]
+>>> funcs
+[<function yell at 0x10ff96510>,
+<method 'lower' of 'str' objects>,
+<method 'capitalize' of 'str' objects>]
+# truy cập các hàm trong danh sách tương tự  như truy cập đối tượng bình thường
+>>> for f in funcs:
+...
+print(f, f('hey there'))
+<function yell at 0x10ff96510> 'HEY THERE!'
+<method 'lower' of 'str' objects> 'hey there'
+<method 'capitalize' of 'str' objects> 'Hey there'
+Có thể trả về hàm như kết quả của một hàm khác.
+# hàm greet nhận đầu vào là một hàm 'func'
+def greet(func):
+	greeting = func('Hi, I am a Python program')
+	print(greeting)
+# truyền hàm bark ở trên vào greet ta được kết quả là chuỗi đã được uppercase
+>>> greet(bark)
+'HI, I AM A PYTHON PROGRAM!'
+Hàm trong python có thể được định nghĩa trong nội dung một hàm khác, và mang trạng thái của hàm cha chứa nó.
+# định nghĩa hàm get_speak_func với tham số là text, volume, trong hàm cha có chứa các hàm con là whisper và yell
+def get_speak_func(text, volume):
+	def whisper(text):
+		return text.lower() + '...'
+	def yell(text):
+		return text.upper() + '!'
+	if volume > 0.5:
+		return yell
+	else:
+		return whisper
+# truyền text và volume như dưới, câu lệnh if được thực hiện và trả về hàm yell (vì 0.7 > 0.5)
+# tiếp đến, hàm yell được gọi và nó mang trạng thái của hàm cha chứa biến text nên trả về kết quả là chuỗi text được viết hoa
+>>> get_speak_func('Hello, World', 0.7)()
+'HELLO, WORLD!'
+Các đối tượng thuần có hành vi như một hàm.
+class Adder:
+	def __init__(self, n):
+		self.n = n
+	def __call__(self, x):
+		return self.n + x
+>>> plus_3 = Adder(3)
+>>> plus_3(4)
+7
+
+3.2. Lambdas are Single-Expression Functions
+Lambda được sử dụng khi cần định nghĩa một hàm mà tên hàm là không cần thiết, tức là có thể hàm này chỉ dùng một lần và hàm này không có tên (hàm ẩn danh)
+>> a = lambda x,y: x + y
+>> a(3,5)
+8
+Lambda là một cấu trúc tiện và rất hay dùng:
+>>> tuples = [(1, 'd'), (2, 'b'), (4, 'a'), (3, 'c')]
+>>> sorted(tuples, key=lambda x: x[1])
+[(4, 'a'), (2, 'b'), (3, 'c'), (1, 'd')]
+>>> sorted(range(-5, 6), key=lambda x: x * x)
+[0, -1, 1, -2, 2, -3, 3, -4, 4, -5, 5]
+
+3.3. The Power of Decorators
+Decorator là một mẫu thiết kế (Design pattern) thường được dùng để thay đổi hành vi, chức năng của hàm(function) hoặc lớp (class) mà không cần phải thay đổi code của hàm hoặc lớp.
+Python hỗ trợ cú pháp (syntax) cho Decorator từ version 2.4
+Về cơ bản Decorator giống như một lớp vỏ bọc (wrapper), nó thay đổi hành vi(behavior) của code trước và sau khi gọi hàm chính (hàm được decorate).
+Decorator được dùng làm gì?
+Cho phép tái sử dụng code.
+Mở rộng các hàm, hoặc lớp mà không cần phải thay đổi code có sẵn —> không cần test lại.
+Ví dụ trong chương trình của bạn bạn cần kiểm tra quyền (permission) của người dùng trước khi thực hiện hàm. Bạn có thể phải thêm code vào tất cả các hàm đã có để kiểm tra. Thay vào đó với decorator, bạn chỉ cần định nghĩa một decorator và khai báo nó trước hàm.
+Làm sao để định nghĩa một decorator?
+Decorator cũng là một hàm chỉ khác là hàm decorator nhận vào một hàm và kết quả trả về của nó là hàm sau khi được decorate.
+Như vậy để định nghĩa một decorator chỉ đơn giản là định nghĩa một hàm nhận vào một hàm khác và trả về một hàm mới có prototype tương đương với hàm nhận vào.
+Ví dụ 1:
+def ten_decorator(f):
+	def wrapper(ten):
+		chuoi_moi = "Ten tui la %s" % ten
+		return f(chuoi_moi)
+	return wrapper
+def xuat_ten(ten):
+	print ten
+CHÚ Ý: hàm wrapper và hàm f phải có tham số phù hợp với nhau. Ví dụ như hàm f nhận vào chỉ 2 tham số thì hàm decorator không thể nhận vào 3 tham số hoặc 1 tham số.
+Sử dụng decorator như thế nào?
+Sử dụng Decorator hết sức đơn giản. Sử dụng decorator trong ví dụ trên cho hàm xuat_ten như sau:
+@ten_decorator
+def xuat_ten(ten):
+	print ten
+Dùng dấu @ để thông báo đó là một decorator. Một hàm có thể dùng nhiều decorator cùng lúc:
+@ten_decorator1
+@ten_decorator2
+@ten_decorator3
+def xuat_ten(ten):
+	print ten
+Decorator hoạt động như thế nào?
+Như trong ví dụ ở trên:
+ten_decorator nhận vào hàm f, sau đó bọc hàm f trong hàm wrapper của nó và trả về hàm wrapper. Hàm wrapper có nhiệm vụ gắn thêm thông tin vào tên rồi mới gọi thực hiện hàm f với chuỗi mới.
+Việc sử dụng:
+@ten_decorator
+def xuat_ten(ten):
+	print ten
+xuat_ten('coulson')
+Tương đương với:
+def xuat_ten(ten):
+	print ten
+ham_xuat_ten_moi = ten_decorator(xuat_ten)
+ham_xuat_ten_moi('coulson')
+Rõ ràng với việc sử dụng cú pháp decorator thì code sẽ ngắn gọn và đơn giản hơn. Developer không phải gọi decorator mỗi lần sử dụng mà trình thông dịch sẽ làm việc đó.
+Đối với hàm sử dụng nhiều decorator
+Ví dụ 2
+@ten_decorator1
+@ten_decorator2
+@ten_decorator3
+def xuat_ten(ten):
+	print ten
+Decorator nào càng ở trên, xa function thì sẽ bọc lớp ngoài Giống như khi bạn bọc trái xoài vào trong bị, rồi lại lấy cái bị khác để bọc bên ngoài nữa.
+Thứ tự thực thi code:
+Code của decorator được thực thi ngay lúc file nguồn Python được load lên. Ngoại trừ code trong hàm wrapper của decorator trong cùng sẽ được thực thi lúc gọi hàm.
+Decorator được gọi thực thi theo thứ tự từ trong (gần hàm nhất) ra ngoài.
+Truyền tham số cho decorator
+Ở trên, để cho đơn giản, và dễ hiểu thì decorator là một hàm có tham số là một hàm khác. Nhưng điều đó không bắt buộc, decorator cũng có thể là một hàm nhận vào tham số bất kỳ và trả về một hàm và hàm trả về này nhận vào tham số là một hàm khác.
+Ví dụ 3: thêm chức danh vào chuỗi xuất ra mình có thể định nghĩa decorator như sau:
+def chuc_danh_decorator(ten_chuc_danh):
+    def ten_decorator(f):
+	def wrapper(ten):
+	    chuoi_moi = "Xin gioi thieu %s %s" % (ten_chuc_danh, ten)
+	    return f(chuoi_moi)
+	return wrapper
+    return ten_decorator
+@chuc_danh_decorator("Giao su")
+def gioi_thieu(ten):
+	print ten
+
+@chuc_danh_decorator("Tien si")
+def gioi_thieu_2(ten):
+	print ten
+>>gioi_thieu("Teo")
+Xin gioi thieu Giao su Teo
+>>gioi_thieu_2("Ti")
+Xin gioi thieu Tien si Ti
+Sự khác biệt:
+Hàm decorator bây giờ không phải nhận vào tham số là một hàm mà có thể là tham số bất kỳ.
+Hàm trả về từ decorator nhận vào một hàm và chính nó mới trả về hàm wrapper
+Cách sử dụng decorator cũng khác một chút. Decorator được gọi chạy ( dùng dấu () ) và truyền vào tham số.
+Nó chạy như thế nào:
+Trong ví dụ 3 decorator được sử dụng @chuc_danh_decorator(“Giao su”). Chú ý dấu (…), decorator được gọi thực thi và nó trả về hàm ten_decorator và chính nó sẽ bọc hàm được decorate.
+Hàm chuc_danh_decorator chỉ có tác dụng là dùng để truyền tham số vào decorator.
+Debug hàm decorator.
+Khi sử dụng decorator thì hàm thực sự được gọi là hàm wrapper của trả về từ decorator. Nên các thuộc tính name, doc, module không còn là của hàm được decorate nữa mà là của wrapper
+Sử dụng lại code trong ví dụ 1:
+
+>> print xuat_ten.__name__
+wrapper
+Khắc phục: sử dụng thư viện functools
+Ví dụ 4:
+from functools import wraps
+def ten_decorator(f):
+	@wraps(f)
+	def wrapper(ten):
+		chuoi_moi = "Ten tui la %s" % ten
+		return f(chuoi_moi)
+	return wrapper
+def xuat_ten( ten ):
+	print ten
+>> print xuat_ten.__name__
+xuat_ten
+Decorator wraps sẽ lấy các thuộc tính name, doc, module của hàm được decorate và gán cho hàm wrapper nên khi lấy những thuộc tính này sẽ trả về thông tin đúng.
+
+3.4. Fun with *args and **kwargs
+Thực sự thì không nhất thiết phải là *args và **kwargs. điều quan trọng là tham số có 1 dấu sao * hay là 2 dấu sao **. Đặt tên tham số là *var hay **vars hay bất cứ thứ gì bạn muốn.
+Nhưng để dễ hiểu thì nên dùng tên chuẩn là *args và **kwargs
+*args và **kwargs dùng để làm gì?
+Khi khai báo 1 hàm, sử dụng *args và **kwargs cho phép bạn truyền vào bao nhiêu tham số cũng được mà không cần biết trước số lượng.
+Ví dụ:
+# với giả sử các tham số truyền vào đều là số
+def sum(*args):
+	total = 0
+  	for number in args:
+    		total += number
+	return total
+# gọi hàm
+sum(1, 2, 3,19)
+sum( 1, 100)
+*args và **kwargs khác gì nhau?
+Cho những bạn chưa biêt: Khi gọi hàm trong Python, có 2 kiểu truyền tham số:
+Truyền tham số theo tên.
+Truyền tham số bình thường theo thứ tự khai báo đối số.
+Ví dụ
+def register(name, password):
+    ....
+#Truyền tham số theo kiểu thông thường, phải theo đúng thứ tự
+register( 'Coulson', 'hail_Hydra')
+#Truyền tham số theo tên, Không cần phải theo thứ tự khai báo thao số
+register( password='cookHim', name='Skye')
+*args nhận các tham số truyền bình thường. Sử dụng args như một list.
+**kwargs nhận tham số truyền theo tên. Sử dụng kwargs như một. dictionary
+Ví dụ:
+def test_args(*args):
+	for item in args:
+    	print item
+>> test_args('Hello', 'world!')
+Hello
+world!
+def test_kwargs(*kwargs):
+	for key, value in kwargs.iteritems():
+    		print '{0} = {1}'.format(key, value)
+>> test_kwargs(name='Dzung', age=10)
+age = 10
+name = Dzung
+Thứ tự sử dụng và truyền tham số *args, **kwargs và tham số bình thường
+Khi sử dụng phải khai báo đối số theo thứ tự:
+đối số xác đinh --> *args --> **kwargs
+Đây là thứ tự bắt buộc. Và khi truyền tham số bạn cũng phải truyền theo đúng thứ tự này. Không thể truyền lẫn lộn giữa 2 loại.
+Khi sử dụng đồng thời *args **kwargs thì không thể truyền tham số bình thường theo tên
+Ví dụ
+def show_detail(name, *args, **kwargs):
+	.....
+>> show_detail(name='Coulson', 'agent', age='40', level='A')
+Error
+def show_detail_2(name, **kwargs):
+  	....
+>> show_detail_2(name='Coulson', age='40', level='A')
+Chạy Ok
+>>> def a(*args, **kargs):
+...   print args[0]
+...   print args[1]
+...   print kargs['a']
+...   print kargs['b']
+... 
+>>> a()
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "<stdin>", line 2, in a
+IndexError: tuple index out of range
+>>> a(1, 2, a=3, b=4)
+1
+2
+3
+4
+>>> def a(a=0, *args, **kargs):
+...   print args[0]
+...   print args[1]
+...   print kargs['a']
+...   print kargs['b']
+... 
+>>> a(1, 2, a=3, b=4)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+TypeError: a() got multiple values for keyword argument 'a'
+>>> a(1, 2, b=4)
+2
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "<stdin>", line 3, in a
+IndexError: tuple index out of range
+>>> a(1, 2, 3, b=4)
+2
+3
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "<stdin>", line 4, in a
+KeyError: 'a'
+
+3.5. Function argument unpacking
+Toán tử * và ** dùng để đánh dấu kiểu đọc tham số được truyền vào. Với *, nó là một list hoặc tupple, với ** nó là một dictionary.
+def print_vector(x, y, z):
+	print('<%s, %s, %s>' % (x, y, z))
+>>> print_vector(*list_vec)
+<1, 0, 1>
+>>> print_vector(**dict_vec)
+<1, 0, 1>
+
+3.6. Nothing to return here
+Mặc định các hàm trong Python sẽ trả về None nếu ta không định nghĩa cụ thể giá trị trả về.
+def foo1(value):
+	if value:
+		return value
+	else:
+		return None
+def foo2(value):
+"""Bare return statement implies return None"""
+if value:
+	return value
+else:
+	return
+def foo3(value):
+"""Missing return statement implies return None"""
+	if value:
+		return value	
+>>> type(foo1(0))
+<class 'NoneType'>
+>>> type(foo2(0))
+<class 'NoneType'>
+>>> type(foo3(0))
+<class 'NoneType'>
+Điều này là mặc định trong Python, tuy nhiên để code trở nên rõ ràng hơn, ta nên định nghĩa cụ thể giá trị trả về.
