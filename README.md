@@ -15,6 +15,8 @@ Maintain by @damminhtien
 6. [Function in SQL](https://github.com/BKFA/Learn-any-things/blob/master/Structure_Query_Language_SQL/Function_in_SQL.md)
 7. [If else in SQL](https://github.com/BKFA/Learn-any-things/blob/master/Structure_Query_Language_SQL/ifelse_variable_null_in_SQL.md)
 8. [Introduce Data manipulation language](https://github.com/BKFA/Learn-any-things/blob/master/Structure_Query_Language_SQL/DML_intro.md)
+## Python tutorial 
+Maintain by @huyenngau
 ## Learn Python the smart way
 Maintain by @damminhtien
 1. [Cleaner python code](https://github.com/BKFA/awesome-learning-bkfa/blob/master/Python/PythonTricks1_Patterns%20for%20Cleaner%20Python)
