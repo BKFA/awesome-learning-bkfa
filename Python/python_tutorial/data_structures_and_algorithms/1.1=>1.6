@@ -1,0 +1,253 @@
+CHAPTER 1: DATA STRUCTURES AND ALGORITHMS
+
+Python cung cấp các cấu trúc dữ liệu có sẵn hữu ích, như list, set, dictionaries. Nói chung, cách sử dụng những cấu trúc này là khá đơn giản. Tuy nhiên các câu hỏi phổ biến liên quan đến searching, sorting, ordering and filtering thường xuất hiện. Vì vậy trong chap này chúng ta sẽ discuss vào các cấu trúc dữ liệu và giải thuật phổ biến liên quan đến dữ liệu.
+
+1.1. Unpacking a sequence into separate variables
+Problem​:
+    Bạn có 1 phần tử hoặc chuỗi phần tử N và bạn muốn unpack vào 1 collection gồm N
+    variables.
+
+Solution:
+    Bất kì chuỗi nào đều có thể được unpack thành các variables bằng cách sử dụng toán tử gán đơn giản. Yêu cầu duy nhất là số các variables và cấu trúc khớp với chuỗi. Ví dụ:
+    >>> ​​p​ ​=​ ​(​4​,​ ​5​)
+    >>> ​​x​,​ ​y​ ​=​ ​p
+    >>> ​​x 4
+    >>> ​​y 5
+    >>>
+    Còn nếu có một mismatch về số lượng các elements, bạn sẽ nhận được một lỗi:
+    >>> ​​p​ ​=​ ​(​4​,​ ​5​)
+    >>> ​​x​,​ ​y​,​ ​z​ ​=​ ​p
+    Traceback (most recent call last):
+    File ​"<stdin>"​, line ​1,​ in ​<module> ValueError​: ​need more than 2 values to unpack >>>
+
+Discussion:
+    - Unpacking works với bất kì đối tượng nào mà có thể iterable, không chỉ là tuples hay lists. Điều này có nghĩa là bao gồm cả strings, files, iterators, and generators. Ví dụ:
+    >>> ​​s​ ​=​ ​'Hello' >>> ​​a​,​ ​b​,​ ​c​,​ ​d​,​ ​e​ ​=​ ​s >>> ​​a
+    'H'
+    >>> ​​b 'e'
+    >>> ​​e 'o' >>>
+    - Khi unpacking, bạn có thể muốn loại bỏ 1 số các giá trị. Python không có cú pháp đặc biệt cho điều này, nhưng chúng ta có thể dùng một tên biến throwaway cho nó. Ví dụ:
+    >>> ​​data​ ​=​ ​[​ ​'ACME'​,​ ​50​,​ ​91.1​,​ ​(​2012​,​ ​12​,​ ​21​)​ ​]
+    >>> ​​_​,​ ​shares​,​ ​price​,​ ​_​ ​=​ ​data
+    >>> ​​shares 50
+    >>> ​​price 91.1
+    >>>
+    - Tuy nhiên hãy đảm bảo tên biến bạn chọn chưa được sử dụng cho một cái gì đó khác rồi.
+
+
+1.2. Unpacking Elements from Iterables of Arbitrary length
+Problem​:
+    Bạn muốn unpack N phần tử từ 1 iterable, nhưng iterables có thể dài hơn N phần tử, gây ra exception là quá nhiều các giá trị để giải nén.
+
+Solution:
+    Python “star expressions” có thể được sử dụng để giải quyết vấn đề này. Ví dụ như bạn đang chạy một khoá học và vào cuối học kỳ, bạn quyết định bỏ bài tập về nhà đầu tiên và cuối cùng và chỉ làm trung bình phần còn lại của chúng. Nếu như bạn chỉ có 4 bài tập thì điều này đơn giản nhưng ví dụ bạn có 24 bài tập thì sao? Một star expression sẽ làm cho việc này dễ dàng:
+    def​​ ​drop_first_last​(​grades​): ​first​,​ ​*​middle​,​ ​last​ ​=​ ​grades ​return​​ ​avg​(​middle​)
+    Một trường hợp sử dụng khác, giả sử bạn có các bản ghi người dùng bao gồm tên, địa chỉ email và theo sau đó là một số điện thoại tuỳ ý. Bạn có thể unpack các bản ghi như thế này:
+    >>> ​​record​ ​=​ ​(​'Dave'​,​ ​'dave@example.com'​,​ ​'773-555-1212'​, '847-555-1212'​)
+    >>> ​​name​,​ ​email​,​ ​*​phone_numbers​ ​=​ ​record
+    >>> ​​name
+     'Dave'
+    >>> ​​email
+    'dave@example.com'
+    >>> ​​phone_numbers ['773-555-1212', '847-555-1212'] >>>
+    Lưu ý rằng, biến phone_numbers sẽ luôn là 1 list, bất kể là có bao nhiêu số điện thoại được unpacked (including none). Vì vậy, bất cứ đoạn mã nào sử dụng phone_numbers đều không cần kiểm tra xem nó có phải là list nữa hay không.
+    Biến được gắn sao cũng có thể là biến đầu tiên trong list. Ví dụ:
+    >>>​ ​*​trailing​,​ ​current​ ​=​ ​[​10​,​ ​8​,​ ​7,​ ​ ​1​,​ ​9​,​ ​5​,​ ​10​,​ ​3​] >>>​ ​trailing
+    [​10​,​ ​8​,​ ​7​,​ ​1​,​ ​9​,​ ​5​,​ ​10​]
+    >>>​ ​current
+    3
+
+Discussion:
+    - Chúng ta sẽ mở rộng cho unpacking các iterables chưa biết hoặc có độ dài tuỳ ý. Thông thường những iterables này đã biết một số component hoặc pattern trong cấu trúc của chúng và star unpacking cho phép các developers tận dụng những patterns này để dễ dàng thay vì thực hiện acrobatics để lấy các phần tử trong iterable.
+    Lưu ý rằng cú pháp star có thể đặc biệt có ích khi iterating qua một chuỗi các tuples có thay đổi độ dài. Ví dụ, có một chuỗi được gắn các tuples:
+    records​ ​=​ ​[ ​(​'foo'​,​ ​1​,​ ​2​),
+    ​(​'bar'​,​ ​'hello'​),
+    ​(​'foo'​,​ ​3​,​ ​4​), ]
+    def​​ ​do_foo​(​x​,​ ​y​): ​print​​(​'foo'​,​ ​x​,​ ​y​)
+    def​​ ​do_bar​(​s​): ​print​​(​'bar'​,​ ​s​)
+    for​​ ​tag​,​ ​*​args​ ​in​​ ​records​: ​if​​ ​tag​ ​==​ ​'foo'​:
+    ​do_foo​(​*​args​) ​elif​​ ​tag​ ​==​ ​'bar'​: ​do_bar​(​*​args​)
+
+     - Star unpacking cũng có ích khi kết hợp với một số loại thao tác xử lí chuỗi, ví dụ như tách. Ví dụ:
+    >>> ​​line​ ​=​ ​'nobody:*:-2:-2:Unprivileged User:/var/empty:/usr/bin/false' >>> ​​uname​,​ ​*​fields​,​ ​homedir​,​ ​sh​ ​=​ ​line​.​split​(​':'​)
+    >>> ​​uname 'nobody'
+    >>> ​​homedir '/var/empty' >>> ​​sh '/usr/bin/false' >>>
+    - Đôi khi bạn muốn unpack các giá trị và vứt chúng đi. Bạn sẽ cần sử dụng một star unpacking nó và 1 biến throwaway phổ biến như _
+    Ví dụ:
+    >>> ​​record​ ​=​ ​(​'ACME'​,​ ​50​,​ ​123.45​,​ ​(​12​,​ ​18​,​ ​2012​)) >>> ​​name​,​ ​*​_​,​ ​(​*​_,​ ​ ​year​)​ ​=​ ​record
+    >>> ​​name
+    'ACME'
+    >>> ​​year 2012 >>>
+    - Có một điểm tương đồng nhất định giữa star unpacking và các thuộc tính xử lí danh sách. Ví dụ, nếu bạn có 1 list, bạn có thể dễ dàng tách nó vào head và tail như thế này:
+    >>> ​​items​ ​=​ ​[​1​,​ ​10​,​ ​7​,​ ​4,​ ​ ​5​,​ ​9]​ >>> ​​head​,​ ​*​tail​ ​=​ ​items
+    >>> ​​head
+    1
+    >>> ​​tail
+    [10, 7, 4, 5, 9] >>>
+    - Chúng ta có thể tưởng tượng được rằng việc viết các hàm thực hiện việc tách như vậy là để thực hiện một số thuật toán đệ quy thông minh. Ví dụ:
+    >>> ​​def​​ ​sum​(​items​):
+    ... ​​ ​head​,​ ​*​tail​ ​=​ ​items
+    ... ​​ ​return​​ ​head​ ​+​ ​sum​(​tail​)​ ​if​​ ​tail​ ​else​​ ​head
+
+     ...
+    >>> ​​sum​(​items​)
+    Tuy nhiên chúng ta ý thức được rằng đệ quy thực sự không phải là một tính năng mạnh của Python do sự giới hạn đệ quy vốn có. Vì vậy, ví dụ cuối cùng này có thể chẳng là gì ngoài việc tò mò về mặt học thuật trong thực tế.
+
+1.3. Keeping the Last N Items
+Problem​:
+    Bạn muốn keep một lịch sử có giới hạn của một vài items cuối nhìn thấy trong suốt quá trình lặp hoặc một số loại xử lý khác.
+
+Solution:
+    Keeping một lịch sử có giới hạn là một cách sử dụng hoàn hảo đối với một collections.deque. Ví dụ, đoạn code dưới đây thực thi một simple text match trên một chuỗi các dòng và tạo dòng phù hợp cùng với N lines of context khi tìm thấy:
+    from​​ ​collections​​ ​import​​ ​deque
+    def​​ ​search​(​lines​,​ ​pattern​,​ ​history​=​5​): ​previous_lines​ ​=​ ​deque​(​maxlen​=​history​) ​for​​ ​line​ ​in​​ ​lines​:
+    ​if​​ ​pattern​ ​in​​ ​line​:
+    ​yield​​ ​line​,​ ​previous_lines
+    ​previous_lines​.a​ ppend​(​line​)
+    # Example use on a file
+    if​​ ​__name__​ ​==​ ​'__main__'​: ​with​​ ​open​(​'somefile.txt'​)​ ​as​​ ​f​:
+    ​for​​ ​line​,​ ​prevlines​ ​in​​ ​search(​ ​f​,​ ​'python'​,​ ​5​): ​for​​ ​pline​ ​in​​ ​prevlines:​
+    ​print​​(​pline​,​ ​end​=​''​) ​print​​(​line​,​ ​end​=​''​) ​print​​(​'-'​*​20​)
+
+Discussion:
+    Khi viết code để search các items, nó thường sử dụng một hàm generator liên quan đến yield, như đã thể hiện trong solution của recipe này. Điều này decouples quá trình tìm kiếm từ code sử dụng các results. Nếu bạn mới dùng generators, có thể xem ở đây: https://www.safaribooksonline.com/library/view/python-cookbook-3rd/9781449357337/ch04. html#generators
+
+    Bằng cách sử dụng deque(maxlen=N) để tạo một hàng đợi có kích thước cố định. Khi các items mới được thêm và hàng đợi full, item cũ nhất (có thể hiểu là item được thêm đầu tiên sẽ tự động bị removed. Ví dụ:
+    >>> ​​q​ ​=​ ​deque​(​maxlen​=3​ ​) >>> ​​q​.​append​(​1​)
+    >>> ​​q​.​append​(​2​)
+    >>> ​​q​.​append​(​3​)
+    >>> ​​q
+    deque([1, 2, 3], maxlen=3) >>> ​​q​.​append​(​4​)
+    >>> ​​q
+    deque([2, 3, 4], maxlen=3) >>> ​​q​.​append​(​5​)
+    >>> ​​q
+    deque([3, 4, 5], maxlen=3)
+    Mặc dù bạn có thể thực hiện thủ công các thao tác như vậy trên một list ( ví dụ: appeding, deleting, etc...), nhưng giải pháp hàng đợi queue thanh lịch hơn và chạy nhanh hơn nhiều. Tổng quát hơn, một hàng đợi có thể được sử dụng mỗi khi bạn cần một cấu trúc hàng đợi đơn giản. Nếu bạn không truyền cho nó một maximum size, bạn sẽ có một hàng đợi không bị chặn, cho phép bạn append và pop ở cả 2 đầu của nó. Ví dụ:
+    >>> ​​q​ ​=​ ​deque​() >>> ​​q​.​append​(​1​) >>> ​​q​.​append​(​2​) >>> ​​q​.​append​(​3​) >>> ​​q
+    deque([1, 2, 3]) >>> ​​q​.​appendleft​(​4​) >>> ​​q
+    deque([4, 1, 2, 3]) >>> ​​q​.​pop​()
+    3
+    >>> ​​q
+    deque([4, 1, 2]) >>> ​​q​.​popleft​()
+    4
+    Adding và Popping items từ cả 3 đầu của nó có độ phức tạp là O(1). Điều này không giống một list khi chèn hoặc remove items từ list có độ phức tạp là O(n).
+
+
+1.4. Finding the Largest or Smallest N Items
+Problem​:
+    Bạn muốn tạo danh sách N items có giá trị lớn nhất hoặc nhỏ nhất từ một collection.
+
+Solution:
+    Module heapq có 2 functions là ​nlargest()​​ và ​nsmallest()​​ mà thực hiện chính xác những điều bạn muốn như ở trên.
+    Ví dụ:
+    import​​ ​  heapq
+    nums​ ​=​ ​[​1​,​ ​8​,​ ​2​,​ ​23​,​ ​7​,​ ​-​4​,​ ​18,​ ​ ​23​,​ ​42​,​ ​37​,​ ​2​] print​​(​heapq​.​nlargest​(​3​,​ ​nums​))​ ​# Prints [42, 37, 23] print​​(​heapq​.​nsmallest​(​3,​ ​ ​nums​))​ ​# Prints [-4, 1, 2]
+    Cả 2 functions này đều cho phép một parameter là key mà cho phép chúng được sử dụng với nhiều dữ liệu phức tạp hơn. Ví dụ:
+    portfolio​ ​=​ ​[
+    ​{​'name'​:​ ​'IBM'​,​ ​'shares'​:​ ​100​,​ ​'price'​:​ ​91.1​}, ​{​'name'​:​ ​'AAPL'​,​ ​'shares'​:​ ​50​,​ ​'price'​:​ ​543.22​}, ​{​'name'​:​ ​'FB'​,​ ​'shares'​:​ ​200​,​ ​'price'​:​ ​21.09​}, ​{​'name'​:​ ​'HPQ'​,​ ​'shares'​:​ ​35​,​ ​'price'​:​ ​31.75​}, ​{​'name'​:​ ​'YHOO'​,​ ​'shares'​:​ ​45​,​ ​'price'​:​ ​16.35​}, ​{​'name'​:​ ​'ACME'​,​ ​'shares'​:​ ​75​,​ ​'price'​:​ ​115.65​}
+    ]
+    cheap​ ​=​ ​heapq​.​nsmallest​(​3,​ ​ ​portfolio​,​ ​key​=​lambda​​ ​s​:​ ​s​[​'price'​])
+    expensive​ ​=​ ​heapq​.​nlargest(​ ​3,​ ​ ​portfolio​,​ ​key​=​lambda​​ ​s​:​ ​s​[​'price'​])
+Discussion:
+    Nếu bạn muốn tạo danh sách N phần tử lớn nhất hoặc nhỏ nhất và N nhỏ hơn kích thước tổng thể của cả collection thì các chức năng này cung cấp hiệu quả vô cùng vượt trội. Như covers bên dưới, chúng work bằng cách trước tiên chuyển data thành 1 danh sách các items có thứ tự như 1 heap. Ví dụ:
+    >>> ​​nums​ ​=​ ​[​1​,​ ​8​,​ ​2​,​ ​23,​ ​ ​7​,​ ​-​4,​ ​ ​18​,​ ​23​,​ ​42​,​ ​37​,​ ​2​] >>> ​​import​​ ​heapq
+    >>> ​​heap​ ​=​ ​list​(​nums​)
+    >>> ​​heapq​.​heapify​(​heap​)
+    >>> ​​heap
+
+    [-4, 2, 1, 23, 7, 2, 18, 23, 42, 37, 8] >>>
+    Tính năng quan trọng nhất của 1 heap là heap[0] luôn luôn là item nhỏ nhất. Hơn nữa, Các items tiếp theo có thể dễ dàng tìm thấy bằng phương thức heapq.heappop().​​ Phương thức này sẽ pop ra phần tử đầu tiên và thay thế nó với item nhỏ nhất tiếp theo (một thao tác yêu cầu O(log N) thao tác với N là kích thước của heap). Ví dụ, muốn tìm 3 phần tử nhỏ nhất ta làm như sau:
+    >>> ​​heapq​.​heappop​(​heap​) -4
+    >>> ​​heapq​.​heappop​(​heap​) 1
+    >>> ​​heapq​.​heappop​(​heap​) 2
+    Các hàm ​nlargest()​​ và ​nsmallest() l​​ à thích hợp nhất nếu bạn muốn tìm một số lượng các items tương đối nhỏ. Nếu đơn giản bạn muốn tìm một item nhỏ nhất hoặc lớn nhất (N=1), dùng min(), max() sẽ nhanh hơn. Tương tư nếu N chính bằng kích thước của cả collection, thường sử dụng cách nhanh hơn là sắp xếp nó trước và lấy một slice ( sử dụng sorted(items)[:N]​​ hoặc sorted(items)[-N:]​​). Cần được lưu ý rằng việc thực thi nlargest() và ​nsmallest() ​​thực tế là adaptive trong cách nó implementation và sẽ thực hiện một số tối ưu hoá thay cho bạn ( ví dụ, bằng cách sử dụng sorting nếu N gần cùng với kích thước như đầu vào).
+    Mặc dù nó là không cần thiết để sử dụng recipe này, việc implementation của một heap là một chủ đề nghiên cứu thú vị và đáng giá. Điều này có thể được tìm thấy trong bất kỳ cuốn sách nào về thuật toán và cấu trúc dữ liệu. Tài liệu về module heapq​​ cũng được discuss chi tiết.
+
+1.5. Implementing a Priority Queue
+Problem​:
+    Bạn muốn implements một hàng đợi mà sắp xếp các items bằng một sự ưu tiên đã cho và luôn luôn trả về item với độ ưu tiên cao nhất trong mỗi thao tác pop.
+
+Solution:
+    Lớp dưới đây sử dụng module heapq​​ để implement một hàng đợi ưu tiên đơn giản: import​​ ​heapq
+    class​​ ​PriorityQueue​​: ​def​​ ​__init__​(​self​):
+    ​self​.​_queue​ ​=​ ​[] ​self​.​_index​ ​=​ ​0
+
+     ​def​​ ​push​(​self​,​ ​item​,​ ​priority​):
+    ​heapq​.​heappush​(​self​.​_queue​,​ ​(​-​priority​,​ ​self​.​_index​,​ ​item​)) ​self​.​_index​ ​+=​ ​1
+    ​def​​ ​pop​(​self​):
+    ​return​​ ​heapq​.​heappop(​ ​self.​ ​_queue​)[​-​1​]
+    Đây là một ví dụ về cách mà nó được sử dụng:
+    >>> ​​class​​ ​Item​​:
+    ... ​​
+    ... ​​
+    ... ​​
+    ... ​​
+    ...
+    >>> ​​q​ ​=​ ​PriorityQueue​() >>> ​​q​.​push​(​Item​(​'foo'​),​ ​1​) >>> ​​q​.​push​(​Item​(​'bar'​),​ ​5​) >>> ​​q​.​push​(​Item​(​'spam'​),​ ​4​) >>> ​​q​.​push​(​Item​(​'grok'​),​ ​1​) >>> ​​q​.​pop​()
+    Item('bar') >>> ​​q​.​pop​() Item('spam') >>> ​​q​.​pop​() Item('foo') >>> ​​q​.​pop​() Item('grok') >>>
+    Quan sát thấy thao tác pop() đầu tiên trả về item có độ ưu tiên cao nhất. Quan sát với 2 phần tử có độ ưu tiên như nhau (foo và grok) được return đúng thứ tự mà nó được chèn vào queue trước đó.
+
+Discussion:
+    Cốt lõi của recipe này có liên quan đến việc sử dụng heapq​​ module. Các functions heapq.heappush()​​ và ​heapq.heappop()​​ để chèn và remove các items từ một list _queue theo cách sao cho phần tử đầu tiên trong list có độ ưu tiên thấp nhất (đã được đề cập trong recipe 1.4). Phương thức heappop​​() luôn luôn trả về item nhỏ nhất, vì vậy đó là từ khoá để làm cho hàng đợi pop ra đúng các items.
+    Hơn thế nữa vì các thao tác push và pop có độ phức tập O(log N) với N là số items của heap, vì vậy chúng khá hiệu quả kể cả đối với các giá trị khá lớn của N.
+    Trong recipe này, hàng đợi bao gồm tuples có form (-priority, index, item).​​ Giá trị priority bị phủ nhận để get hàng đợi sắp xếp các items từ độ ưu tiên cao nhất xuống độ ưu tiên thấp
+    ​def​​ ​__init__​(​self​,​ ​name​): ​self​.​name​ ​=​ ​name
+    ​def​​ ​__repr__​(​self​):
+    ​return​​ ​'Item({!r})'​.​format​(​self​.​name​)
+
+     nhất. Điều này ngược với thứ tự heap thông thường là sắp xếp các giá trị từ thấp nhất đến cao nhất.
+    Vai trò của biến index​​ là để sắp xếp đúng các items đúng với độ ưu tiên. Bằng cách giữ một index tăng liên tục, các items sẽ được sắp xếp theo thứ tự mà chúng được chèn. Tuy nhiên, index cung cấp một vai trò quan trọng là làm cho việc so sánh work với các items có độ ưu tiên giống nhau.
+    Xem xét kĩ hơn điều này, chúng ta có thể xét các Item trong ví dụ trên như sau:
+    >>> ​​a​ ​=​ ​Item​(​'foo'​)
+    >>> ​​b​ ​=​ ​Item​(​'bar'​)
+    >>> ​​a​ ​<​ ​b
+    Traceback (most recent call last):
+    File ​"<stdin>"​, line ​1,​ in ​<module> TypeError​: ​unorderable types: Item() < Item() >>>
+    Nếu bạn tạo tuples (priority, item), chúng có thể được so sánh miễn là khác độ ưu tiên. Tuy nhiên nếu 2 tuples với độ ưu tiên giống nhau được so sánh, thao tác so sánh cũng failed như trên. Ví dụ:
+    >>> ​​a​ ​=​ ​(​1​,​ ​Item​(​'foo'​)) >>> ​​b​ ​=​ ​(​5​,​ ​Item​(​'bar'​)) >>> ​​a​ ​<​ ​b
+    True
+    >>> ​​c​ ​=​ ​(​1​,​ ​Item​(​'grok')​ )
+    >>> ​​a​ ​<​ ​c
+    Traceback (most recent call last):
+    File ​"<stdin>"​, line ​1,​ in ​<module> TypeError​: ​unorderable types: Item() < Item() >>>
+    Bằng cách sử dụng index bổ sung và tạp tuples (priority, index, item), bạn có thể tránh vấn đề này hoàn toàn vì sẽ không có 2 tuples nào giống nhau đối với 2 index có giá trị giống nhau. Ví dụ:
+    >>> ​​a​ ​=​ ​(​1​,​ ​0​,​ ​Item​(​'foo'​)) >>> ​​b​ ​=​ ​(​5​,​ ​1​,​ ​Item​(​'bar'​)) >>> ​​c​ ​=​ ​(​1​,​ ​2​,​ ​Item​(​'grok'​)) >>> ​​a​ ​<​ ​b
+    True
+    >>> ​​a​ ​<​ ​c
+
+     True >>>
+
+1.6. Mapping Keys to Multiple Values in a Dictionary
+Problem​:
+    Bạn muốn tạo một dictionary để map các keys cho nhiều hơn 1 value
+Solution:
+    Một dict là một mapping mà mỗi key được map một value. Nếu bạn muốn map các keys cho multi-value, bạn cần lưu các value ấy trong một container khác ví dụ như một list hoặc một set. Ví dụ, bạn có thể tạo các dict như thế này:
+    d​ ​=​ ​{
+    ​'a'​ ​:​ ​[​1​,​ ​2​,​ ​3​], ​'b'​ ​:​ ​[​4​,​ ​5​]
+    }
+    e​ ​=​ ​{
+    ​'a'​ ​:​ ​{​1​,​ ​2​,​ ​3​}, ​'b'​ ​:​ ​{​4​,​ ​5​}
+    }
+    Việc chọn sử dụng list hay set phụ thuộc vào mục đích sử dụng. Sử dụng list nếu bạn muốn giữ đúng thứ tự các items như khi được chèn. Sử dụng set nếu bạn muốn không lặp các item( hoặc đơn giản là không care về thứ tự).
+    Để dễ dàng xây dựng các dict như thế, bạn có thể sử dụng defaultdict trong module collections. Một tính năng của default là tự động khởi tạo giá trị đầu tiên vì vậy bạn có thể focus vào adding items. Ví dụ:
+    from​​ ​collections​​ ​import​​ ​defaultdict
+    d​ ​=​ ​defaultdict​(​list​) d​[​'a'​]​.​append​(​1​) d​[​'a'​]​.​append​(​2​) d​[​'b'​]​.​append​(​4​)
+    ...
+    d​ ​=​ ​defaultdict​(​set​) d​[​'a'​]​.​add​(​1​) d​[​'a'​]​.​add​(​2​)
+
+    d​[​'b'​]​.​add​(​4​) ...
+    defaultdict​​ sẽ tự động tạo ra các entries dict cho các keys được access sau đó (ngay cả khi chúng không được tìm thấy trong dict). Nếu bạn không muốn có hành vi này, bạn phải sử dụng setdefault​​(). Ví dụ:
+    d​ ​=​ ​{}​ ​# A regular dictionary d​.​setdefault​(​'a'​,​ ​[])​.a​ ppend​(​1​) d​.​setdefault​(​'a'​,​ ​[])​.a​ ppend​(​2​) d​.​setdefault​(​'b'​,​ ​[])​.​append​(​4​) ...
+    Tuy nhiên nhiều lập trình viên thấy setdefault() có chút không tự nhiên - không đề cập đến thực tế là nó luôn luôn tạo một instance mới của các giá trị đã init trên mỗi lần gọi. (list [ ] empty là một ví dụ).
+
+Discussion:
+    Theo nguyên tắc, xây dựng dict đa giá trị là đơn giản. Tuy nhiên, việc khởi tạo giá trị đầu tiên có thể lộn xộn nếu bạn cố tự làm điều đó. Ví dụ, bạn có đoạn code như thế này:
+    d​ ​=​ ​{}
+    for​​ ​key​,​ ​value​ ​in​​ ​pairs​:
+    ​if​​ ​key​ ​not​​ ​in​​ ​d​: ​d​[​key​]​ ​=​ ​[]
+    ​d​[​key​]​.​append​(​value​)
+    Bằng cách sử dụng một defaultdict đơn giản làm cho code clean hơn nhiều:
+    d​ ​=​ ​defaultdict​(​list​)
+    for​​ ​key​,​ ​value​ ​in​​ ​pairs​:
+    ​d​[​key​]​.​append​(​value​)
+    Recipe này liên quan mạnh mẽ đến vấn đề của việc nhóm các records cùng nhau trong vấn đề xử lý data. Chúng ta có thể xem một ví dụ trong recipe 1.15 sau này.
