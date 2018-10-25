@@ -17,4 +17,4 @@ Maintain by @damminhtien
 8. [Introduce Data manipulation language](https://github.com/BKFA/Learn-any-things/blob/master/Structure_Query_Language_SQL/DML_intro.md)
 ## Python Tutorial
 Maintain by @huyenngau
-1. Data structures and algorithms
+1. [Data structures and algorithms](https://github.com/huyenngau/awesome-learning-bkfa/tree/master/Python/python_tutorial/data_structures_and_algorithms)
