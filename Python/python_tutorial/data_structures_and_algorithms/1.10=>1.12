@@ -101,7 +101,7 @@ r
 d
 >>>
 
-1.9. Determining the Most Frequently Occurring Items in a Sequence
+1.12. Determining the Most Frequently Occurring Items in a Sequence
 Problem:
 Bạn có một chuỗi các items, bạn muốn xác định các items xuất hiện nhiều nhất trong chuỗi.
 
