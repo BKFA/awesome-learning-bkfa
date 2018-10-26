@@ -16,5 +16,6 @@ Maintain by @damminhtien
 7. [If else in SQL](https://github.com/BKFA/Learn-any-things/blob/master/Structure_Query_Language_SQL/ifelse_variable_null_in_SQL.md)
 8. [Introduce Data manipulation language](https://github.com/BKFA/Learn-any-things/blob/master/Structure_Query_Language_SQL/DML_intro.md)
 ## Python Tutorial
-Maintain by @huyenngau
+Maintain by @huyenngau]
+This tutorial is aimed at more experienced Python programmers who are looking to deepen their understanding of the language and modern programming idioms. Much of the material focuses on some of the more advanced techniques used by libraries, frameworks, and applications. Throughout the tutorial, the recipes generally assume that the reader already has the necessary background to understand the topic at hand (e.g., general knowledge of computer science, data structures, complexity, systems programming, concurrency, C programming, etc.).
 1. [Data structures and algorithms](https://github.com/huyenngau/awesome-learning-bkfa/tree/master/Python/python_tutorial/data_structures_and_algorithms)
