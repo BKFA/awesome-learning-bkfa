@@ -1,0 +1,204 @@
+2.13. Aligning Text Strings
+Problem:
+Bạn cần định dạng văn bản với một số loại căn chỉnh được áp dụng.
+
+Solution:
+Đối với căn chỉnh cơ bản của các chuỗi, các phương thức của chuỗi như ljust(), rjust() và center() có thể được sử dụng.
+Ví dụ:
+>>> text = 'Hello World'
+>>> text.ljust(20)
+'Hello World         '
+>>> text.rjust(20)
+'         Hello World'
+>>> text.center(20)
+'    Hello World     '
+>>>
+Tất cả những phương thức này chấp nhận một tuỳ chọn điền vào ký tự.
+Ví dụ:
+>>> text.rjust(20,'=')
+'=========Hello World'
+>>> text.center(20,'*')
+'****Hello World*****'
+>>>
+Hàm format() cũng có thể được sử dụng để dễ dàng căn chỉnh mọi thứ. Tất cả bạn cần làm là sử dụng các kí tự <, > hoặc ^ đi cùng với độ rộng mà bạn mong muốn.
+Ví dụ:
+>>> format(text, '>20')
+'         Hello World'
+>>> format(text, '<20')
+'Hello World         '
+>>> format(text, '^20')
+'    Hello World     '
+>>>
+
+Nếu bạn muốn bao gồm các kí tự khác không phải là khoảng trống, hãy xác định nó trước các kí tự căn chỉnh:
+>>> format(text, '=>20s')
+'=========Hello World'
+>>> format(text, '*^20s')
+'****Hello World*****'
+>>>
+Những mã nguồn định dạng này cũng được sử dụng trong phương thức format() khi định dạng nhiều giá trị.
+Ví dụ:
+>>> '{:>10s} {:>10s}'.format('Hello', 'World')
+'     Hello      World'
+>>>
+Một lợi ích của phương thức format() là nó không dành riêng cho các chuỗi. Nó hoạt động với bất kỳ giá trị nào, làm cho nó có mục đích chung hơn.
+Ví dụ, bạn có thể sử dụng nó với các số:
+>>> x = 1.2345
+>>> format(x, '>10')
+'    1.2345'
+>>> format(x, '^10.2f')
+'   1.23   '
+>>>
+
+
+Discussion:
+Trong mã nguồn cũ hơn, bạn sẽ thấy toán tử % được sử dụng để định dạng văn bản.
+Ví dụ:
+>>> '%-20s' % text
+'Hello World         '
+>>> '%20s' % text
+'         Hello World'
+>>>
+Nhưng trong mã nguồn mới, có thể bạn sẽ thích sử dụng hàm format() hơn. Hàm format() mạnh hơn nhiều so với những gì được cung cấp bởi toán tử %. Hơn nữa, hàm format() có mục đích chơn hơn là sử dụng các phương thức ljust(), rjust(), center() của chuỗi trong đó nó hoạt động với bất kỳ loại đối tượng nào.
+Để có đầy đủ danh sách các tính năng khả dụng với hàm format(), tham khảo the online Python documentation (https://docs.python.org/3/library/string.html#formatspec).
+
+
+2.14. Combining and Concatenating Strings
+Problem:
+Bạn muốn kết hợp nhiều chuỗi nhỏ thành chuỗi lớn hơn.
+
+Solution:
+Nếu các chuỗi bạn muốn kết hợp được tìm thấy trong một trình tự hoặc vòng lặp, cách nhanh nhất để kết hợp chúng là sử dụng phương thức join().
+Ví dụ:
+>>> parts = ['Is', 'Chicago', 'Not', 'Chicago?']
+>>> ' '.join(parts)
+'Is Chicago Not Chicago?'
+>>> ','.join(parts)
+'Is,Chicago,Not,Chicago?'
+>>> ''.join(parts)
+'IsChicagoNotChicago?'
+>>>
+
+Ngay cái nhìn đầu tiên, cú pháp này có thể rất khó nhìn, nhưng thao tác join() được xác định như một phương thức trên các chuỗi. Một phần là do các đối tượng bạn muốn join có thể đến từ bất kỳ các trình tự dữ liệu khác nhau ( Ví dụ, lists, tuples, dicts, files, hay generators), và nó có thể sẽ là dư thừa để join() được thực thi như một phương thức trong tất cả các đối tượng tách biệt này. Vì vậy bạn chỉ xác định chuỗi riêng biệt mà bạn muốn và sử dụng phương thức join() trên nó để join các đoạn text mong muốn với nhau.
+Nếu bạn chỉ kết hợp một vài chuỗi, bằng cách sử dụng toán tử + thường là đủ để hoạt động tốt.
+Ví dụ:
+>>> a = 'Is Chicago'
+>>> b = 'Not Chicago?'
+>>> a + ' ' + b
+'Is Chicago Not Chicago?'
+>>>
+Toán tử + cũng hoạt động tốt như một thay thế cho nhiều thao tác định dạng chuỗi phức tạp.
+Ví dụ:
+>>> print('{} {}'.format(a,b))
+Is Chicago Not Chicago?
+>>> print(a + ' ' + b)
+Is Chicago Not Chicago?
+>>>
+Nếu bạn đang cố gắng để kết hợp các chuỗi cùng nhau trong mã nguồn, bạn có thể đơn giản đặt chúng liền kề với nhau mà không có toán tử +.
+Ví dụ:
+>>> a = 'Hello' 'World'
+>>> a
+'HelloWorld'
+>>>
+
+Discussion:
+Việc kết hợp các chuỗi cùng nhau có vẻ không đủ cao để đảm bảo toàn bộ công thức, nhưng nó thường là một lựa chọn mà các lập trình viên thực hiện các lựa chọn lập trình tác động nghiêm trọng đến hiệu suất mã nguồn của họ.
+Điều quan trọng nhất để biết là bằng cách sử dụng toán tử + để join nhiều chuỗi cùng nhau là không hiệu quả do các bản sao bộ nhớ và thu gom rác thải xảy ra. Đặc biệt, bạn không muốn viết mã để join các chuỗi cùng nhau như thế này:
+s = ''
+for p in parts:
+    s += p
+Mã này chạy chậm hơn so với sử dụng phương thức join(), chính là do mỗi thao tác += tạo một đối tượng chuỗi. Tốt hơn là bạn chỉ thu thập tất cả các phần trước và sau đó join chúng lại với nhau.
+Một mẹo liên quan đến chuyển đổi dữ liệu thành chuỗi chuỗi và nối cùng một lúc bằng cách sử dụng một biểu thức hàm sinh, như được mô tả trong recipe 1.19.
+Ví dụ:
+>>> data = ['ACME', 50, 91.1]
+>>> ','.join(str(d) for d in data)
+'ACME,50,91.1'
+>>>
+Ngoài ra hãy tìm kiếm các chuỗi nối không cần thiết. Đôi khi lập trình viên mang đi với việc nối khi nó thực sự không cần thiết về mặt kỹ thuật.
+Ví dụ, khi in:
+print(a + ':' + b + ':' + c)       # Ugly
+print(':'.join([a, b, c]))         # Still ugly
+
+print(a, b, c, sep=':')            # Better
+Việc trộn các thao tác vào ra và việc nối chuỗi là một cái gì đó có thể yêu cầu tìm hiểu trong ứng dụng của bạn.
+Ví dụ, xem 2 đoạn code dưới đây:
+# Version 1 (string concatenation)
+f.write(chunk1 + chunk2)
+
+# Version 2 (separate I/O operations)
+f.write(chunk1)
+f.write(chunk2)
+Nếu 2 chuỗi nhỏ, thì version 1 có thể hỗ trợ hiệu suất tốt hơn do chi phí vốn có của việc thực hiện cuộc gọi hệ thống vào ra. Mặt khác, nếu hai chuỗi lớn, version 2 có thể hiệu quả hơn, vì nó tránh tạo ra một kết quả tạm thời lớn và việc sao chép các chuỗi lớn. Một lần nữa, nó phải được nhấn mạnh rằng điều này là một cái gì đó bạn sẽ phải tìm hiểu liên quan đến dữ liệu của chính bạn để xem xét việc thực thi tốt nhất.
+Cuối cùng nhưng không kém phần quan trọng là nếu bạn viết code xây dựng đầu ra từ nhiều chuỗi nhỏ, bạn có thể xem xét việc viết code như một hàm generator, bằng cách sử dụng câu lệnh yield như thế này:
+def sample():
+    yield 'Is'
+    yield 'Chicago'
+    yield 'Not'
+    yield 'Chicago?'
+Điều thú vị ở cách tiếp cận này là nó không đưa ra giả định về cách các fragments được tập hợp lại với nhau.
+Ví dụ, bạn có thể đơn giản join các fragments bằng cách sử dụng join():
+text = ''.join(sample())
+Hoặc bạn có thể điều hướng các fragments đến I/O:
+for part in sample():
+    f.write(part)
+Hoặc bạn có thể đưa ra một số loại chương trình lai thông minh về việc kết hợp các thao tác I/O:
+def combine(source, maxsize):
+    parts = []
+    size = 0
+    for part in source:
+        parts.append(part)
+        size += len(part)
+        if size > maxsize:
+            yield ''.join(parts)
+            parts = []
+            size = 0
+    yield ''.join(parts)
+
+for part in combine(sample(), 32768):
+    f.write(part)
+Điểm mẫu chốt ở đây là hàm generator gốc không phải biết chi tiết. Nó chỉ sinh ra các bộ phận.
+2.15. Reformatting Text to a Fixed Number of Columns
+Problem:
+Bạn có các chuỗi dài mà bạn muốn định dạng lại để chúng lập đầy một số cột mà người dùng chỉ định.
+
+Solution:
+Sử dụng module textwrap để định dạng lại văn bản cho đầu ra.
+Ví dụ, giả sử bạn có chuỗi dài dưới đây:
+s = "Look into my eyes, look into my eyes, the eyes, the eyes, \
+the eyes, not around the eyes, don't look around the eyes, \
+look into my eyes, you're under."
+Đây là cách bạn sử dụng module textwrap để định dạng lại nó theo nhiều cách:
+>>> import textwrap
+>>> print(textwrap.fill(s, 70))
+Look into my eyes, look into my eyes, the eyes, the eyes, the eyes,
+not around the eyes, don't look around the eyes, look into my eyes,
+you're under.
+
+>>> print(textwrap.fill(s, 40))
+Look into my eyes, look into my eyes,
+the eyes, the eyes, the eyes, not around
+the eyes, don't look around the eyes,
+look into my eyes, you're under.
+
+>>> print(textwrap.fill(s, 40, initial_indent='    '))
+    Look into my eyes, look into my
+eyes, the eyes, the eyes, the eyes, not
+around the eyes, don't look around the
+eyes, look into my eyes, you're under.
+
+>>> print(textwrap.fill(s, 40, subsequent_indent='    '))
+Look into my eyes, look into my eyes,
+    the eyes, the eyes, the eyes, not
+    around the eyes, don't look around
+    the eyes, look into my eyes, you're
+    under.
+
+
+Discussion:
+Module textwrap là một cách đơn giản để dọn dẹp văn bản cho việc in ra - đặc biệt nếu bạn muốn đầu ra vừa khít với terminal. Với chủ đề về kích thước của terminal, bạn có thể lấy nó bằng cách sử dụng os.get_terminal_size(). Ví dụ:
+>>> import os
+>>> os.get_terminal_size().columns
+80
+>>>
+
+Phương thức fill() có một vài tuỳ chọn bổ sung điều khiển cách nó xử lý các tabs, kết thúc câu,... Xem document for the textwrap.TextWrapper (https://docs.python.org/3.3/library/textwrap.html#textwrap.TextWrapper ) class để biết chi tiết hơn.
