@@ -1,0 +1,692 @@
+2.16. Interpolating Variables in Strings
+Problem:
+Bạn muốn tạo một chuỗi trong đó các tên biến được nhúng được thay thế bằng một biểu diễn chuỗi giá trị của biến.
+
+Solution:
+Python không hỗ trợ trực tiếp thay thế đơn giản cho các giá trị biến trong chuỗi. Tuy nhiên, tính năng này có thể sử dụng phương thức format().
+Ví dụ:
+>>> s = '{name} has {n} messages.'
+>>> s.format(name='Guido', n=37)
+'Guido has 37 messages.'
+>>>
+Cách khác, nếu các giá trị được thay thế thực sự được tìm thấy trong các biến, bạn có thể sử dụng việc kết hợp các hàm format_map() và vars() như dưới đây:
+>>> name = 'Guido'
+>>> n = 37
+>>> s.format_map(vars())
+'Guido has 37 messages.'
+>>>
+Một tính năng tinh tế của vars() là nó làm việc với các instances.
+Ví dụ:
+>>> class Info:
+...    def __init__(self, name, n):
+...        self.name = name
+...        self.n = n
+...
+>>> a = Info('Guido',37)
+>>> s.format_map(vars(a))
+'Guido has 37 messages.'
+>>>
+Một nhược điểm của format() và format_map() là chúng không xử lý với việc thiếu các giá trị.
+Ví dụ:
+>>> s.format(name='Guido')
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+KeyError: 'n'
+>>>
+Một cách để tránh điều này là định nghĩa một lớp dict thay thế với một phương thức __missing__(), như dưới đây:
+class safesub(dict):
+    def __missing__(self, key):
+        return '{' + key + '}'
+
+Bây giờ hãy sử dụng lớp này để wrap các đầu vào cho format_map():
+>>> del n     # Make sure n is undefined
+>>> s.format_map(safesub(vars()))
+'Guido has {n} messages.'
+>>>
+Nếu bạn thấy bạn thường thực thi những bước này trong code của bạn, bạn có thể ẩn việc xử lý thay thế biến đằng sau một hàm tiện ích nhỏ mà sử dụng một cái gọi là “frame hack".
+Ví dụ:
+import sys
+
+def sub(text):
+    return text.format_map(safesub(sys._getframe(1).f_locals))
+Bây giờ bạn có thể nhập mọi thứ như thế này:
+>>> name = 'Guido'
+>>> n = 37
+>>> print(sub('Hello {name}'))
+Hello Guido
+>>> print(sub('You have {n} messages.'))
+You have 37 messages.
+>>> print(sub('Your favorite color is {color}'))
+Your favorite color is {color}
+>>>
+
+Discussion:
+Việc thiếu nội suy biến đúng trong Python đã dẫn đến nhiều giải pháp trong các năm qua. Để thay thế cho giải pháp đã trình bày trong recipe này, bạn sẽ thỉnh thoảng thấy việc định dạng chuỗi như thế này:
+>>> name = 'Guido'
+>>> n = 37
+>>> '%(name) has %(n) messages.' % vars()
+'Guido has 37 messages.'
+>>>
+Bạn cũng có thể thấy việc sử dụng template strings:
+>>> import string
+>>> s = string.Template('$name has $n messages.')
+>>> s.substitute(vars())
+'Guido has 37 messages.'
+>>>
+Tuy nhiên các phương thức format() và format_map() hiện đại hơn nhiều so với các giải pháp trên, và nên được yêu thích hơn. Một lợi ích của việc sử dụng format() là bạn cũng có được tất cả các tính năng liên quan đến việc định dạng chuỗi (căn chỉnh, padding, định dạng số,....), những cái này đơn giản là không thể đối với việc thay thế chẳng hạn như các đối tượng Template string.
+Các phần của recipe này cũng minh hoạ một vài tính năng nâng cao thú vị. Phương thức __missing__() ít được biết đến là một phương thức mà bạn có thể định nghĩa để xử lý việc thiếu các giá trị. Trong lớp safesub, phương thức này được định nghĩa để trả về các giá trị bị thiếu trở lại như một placeholder. Thay vì nhận một ngoại lệ KeyError, bạn sẽ nhìn thấy các giá trị bị thiếu xuất hiện trong chuỗi kết quả (có khả năng hữu ích để gỡ lỗi).
+Hàm sub()  sử dụng sys._getframe(1) để trả về khung ngăn xếp của lời gọi. Từ đó, thuộc tính f_locals được truy cập để lấy các biến local. Nó đi mà không nói rằng việc thiếu xung quanh với khung ngăn xếp có lẽ nên được tránh trong hầu hết các mã. Tuy nhiên, đối với các hàm chức năng tiện ích chẳng hạn như tính năng thay thế chuỗi, nó có thể hữu ích. Ngoài ra, đáng chú ý rằng f_locals là một dict là sao chép của các biến local trong lời gọi hàm. Mặc dù bạn có thể chỉnh sửa các nội dung của f_locals, việc chỉnh sửa không thực sự có tác dụng lâu dài. Vì vậy, mặc dù truy cập vào một khung ngăn xếp khác nhau có thể trông xấu, nó không thể vô tình ghi đè lên các biến hoặc thay đổi môi trường local của lời gọi.
+
+
+2.17. Handling HTML and XML Entities in Text
+Problem:
+Bạn muốn thay thế các mục entities HTML hoặc XML chẳng hạn như &entity; hoặc &#code; với văn bản tương ứng của chúng. Ngoài ra, bạn cần tạo văn bản, nhưng không bao gồm các ký tự nhất định(như <, > hoặc &).
+
+Solution:
+Nếu bạn đang tạo văn bản, việc thay thế các ký tự đặc biệt như < hay > là tương đối dễ dàng nếu bạn sử dụng hàm html.escape().
+Ví dụ:
+>>> s = 'Elements are written as "<tag>text</tag>".'
+>>> import html
+>>> print(s)
+Elements are written as "<tag>text</tag>".
+>>> print(html.escape(s))
+Elements are written as &quot;&lt;tag&gt;text&lt;/tag&gt;&quot;.
+
+>>> # Disable escaping of quotes
+>>> print(html.escape(s, quote=False))
+Elements are written as "&lt;tag&gt;text&lt;/tag&gt;".
+>>>
+Nếu bạn đang cố gắng xuất ra văn bản dạng  ASCII và muốn nhúng các thực thể mã kí tự cho các kí tự không phải ASCII, bạn có thể sử dụng tham số errors=’xmlcharrefreplace' cho các hàm liên quan đến I/O để làm điều này.
+Ví dụ:
+>>> s = 'Spicy Jalapeño'
+>>> s.encode('ascii', errors='xmlcharrefreplace')
+b'Spicy Jalape&#241;o'
+>>>
+Để thay thế các entities trong đoạn text, cần có một cách tiếp cận khác. Nếu bạn đang xử lý HTML hoặc XML, thử sử dụng một trình phân tích cú pháp HTML hoặc XMl trước tiên. thông thường những công cụ này sẽ tự động xử lý việc thay thế các giá trị cho bạn trong suốt quá trình phân tích cú pháp và bạn không cần lo lắng về nó.
+Nếu, vì một lý do nào đó, bạn nhận được văn bản trống với một số entities trong đó, và bạn muốn chúng được thay thế thủ công, bạn có thể thường làm điều này nếu sử dụng nhiều hàm hoặc phương thức tiện ích liên quan đến trình phân tích cú pháp HTML hoặc XML.
+Ví dụ:
+>>> s = 'Spicy &quot;Jalape&#241;o&quot.'
+>>> from html.parser import HTMLParser
+>>> p = HTMLParser()
+>>> p.unescape(s)
+'Spicy "Jalapeño".'
+>>>
+
+>>> t = 'The prompt is &gt;&gt;&gt;'
+>>> from xml.sax.saxutils import unescape
+>>> unescape(t)
+'The prompt is >>>'
+>>>
+
+Discussion:
+Việc thoát (escaping) các ký tự đặc biệt là một chi tiết dễ bị bỏ qua khi tạo HTML hoặc XML. Điều này đặc biệt đúng nếu bạn đang tự tạo ra đầu ra đó bằng cách sử dụng print() hoặc các tính năng định dạng chuỗi cơ bản khác. Bằng cách sử dụng một hàm tiện ích như html.escape() là một cách giải quyết dễ dàng.
+Nếu bạn cần xử lý văn bản theo một hướng khác, nhiều hàm tiện ích khác, chẳng hạn như xml.saxutils.unescape() có thể giúp bạn. Tuy nhiên, bạn thực sự cần nghiên cứu việc sử dụng một trình phân tích cú pháp đúng. Ví dụ, nếu việc xử lý HTML hoặc XML, bằng cách sử dụng một module phân tích cú pháp như html.parser hoặc xml.etree.ElementTree nên đã xử lý các chi tiết liên quan đến việc thay thế các entities trong đầu vào văn bản cho bạn rồi.
+
+2.18. Tokenizing Text
+Problem:
+Bạn có một chuỗi mà bạn muốn phân tích cú pháp từ trái qua phải thành một một dòng mã thông báo (tokens).
+
+Solution:
+Giả sử bạn có một chuỗi văn bản như thế này:
+text = 'foo = 23 + 42 * 10'
+Để mã hoá đoạn văn bản trên, bạn chỉ đơn thuần là cần khớp các mẫu. Bạn cần có một số cách để xác định loại mẫu. Ví dụ, bạn có thể muốn trả về chuỗi thành một trình tự các cặp như thế này:
+tokens = [('NAME', 'foo'), ('EQ','='), ('NUM', '23'), ('PLUS','+'),
+          ('NUM', '42'), ('TIMES', '*'), ('NUM', '10')]
+Để làm loại chia tách này, bước đầu tiên là định nghĩa tất cả các tokens có thể, bao gồm khoảng trắng, bằng các mẫu biểu thức chính quy bằng cách đặt tên cho các nhóm như thế này:
+NAME = r'(?P<NAME>[a-zA-Z_][a-zA-Z_0-9]*)'
+NUM  = r'(?P<NUM>\d+)'
+PLUS = r'(?P<PLUS>\+)'
+TIMES = r'(?P<TIMES>\*)'
+EQ    = r'(?P<EQ>=)'
+WS    = r'(?P<WS>\s+)'
+
+master_pat = re.compile('|'.join([NAME, NUM, PLUS, TIMES, EQ, WS]))
+
+Trong các mẫu re này, quy ước ?P<TOKENNAME> được sử dụng để gán tên cho mẫu. Điều này sẽ được sử dụng sau.
+Tiếp theo, để mã hoá, sử dụng một phương thức ít được biết đến là scanner() của các đối tượng mẫu (pattern). Phương thức này tạo một đối tượng scanner trong đó lặp lại việc gọi để bước match() thông qua văn bản được cung cấp tại một thời điểm.
+Đây là một ví dụ tương tác cách một đối tượng scanner làm việc:
+>>> scanner = master_pat.scanner('foo = 42')
+>>> scanner.match()
+<_sre.SRE_Match object at 0x100677738>
+>>> _.lastgroup, _.group()
+('NAME', 'foo')
+>>> scanner.match()
+<_sre.SRE_Match object at 0x100677738>
+>>> _.lastgroup, _.group()
+('WS', ' ')
+>>> scanner.match()
+<_sre.SRE_Match object at 0x100677738>
+>>> _.lastgroup, _.group()
+('EQ', '=')
+>>> scanner.match()
+<_sre.SRE_Match object at 0x100677738>
+>>> _.lastgroup, _.group()
+('WS', ' ')
+>>> scanner.match()
+<_sre.SRE_Match object at 0x100677738>
+>>> _.lastgroup, _.group()
+('NUM', '42')
+>>> scanner.match()
+>>>
+Để mang những ký thuật này và đặt nó vào mã nguồn, nó có thể dễ dàng dọn dẹp và dễ dàng gói thành một hàm sinh như thế này:
+from collections import namedtuple
+
+Token = namedtuple('Token', ['type','value'])
+
+def generate_tokens(pat, text):
+    scanner = pat.scanner(text)
+    for m in iter(scanner.match, None):
+        yield Token(m.lastgroup, m.group())
+
+# Example use
+for tok in generate_tokens(master_pat, 'foo = 42'):
+    print(tok)
+
+# Produces output
+# Token(type='NAME', value='foo')
+# Token(type='WS', value=' ')
+# Token(type='EQ', value='=')
+# Token(type='WS', value=' ')
+# Token(type='NUM', value='42')
+Nếu bạn muốn lọc dòng mã thông báo theo một số cách, bạn có thể định nghĩa thêm các hàm của hàm sinh hoặc sử dụng một biểu thức hàm sinh.
+Ví dụ, đây là cách bạn có thể lọc ra tất cả các khoảng trắng:
+tokens = (tok for tok in generate_tokens(master_pat, text)
+          if tok.type != 'WS')
+for tok in tokens:
+    print(tok)
+
+Discussion:
+Việc mã hoá (tokenizing) thường là bước đầu tiên cho việc xử lý và phân tích cú pháp văn bản nâng cao hơn. Để sử dụng việc scanning như đã thể hiện ở trên, có một số chi tiết quan trọng cần lưu ý. Đầu tiên, bạn phải đảm bảo rằng bạn xác định mỗi chuỗi văn bản có thể xuất hiện trong đầu vào với một mẫu re tương ứng. Nếu bất kỳ văn bản không khớp nào được tìm thấy. việc scanning đơn giản là sẽ dừng lại. Điều này là lý do tại sao nó cần thiết để xác định token khoảng trắng (WS) trong ví dụ.
+Thứ tự các tokens trong biểu thức chính quy cũng là vấn đề quan trọng. Khi matching, re cố gắng khớp các mẫu trong thứ tự được xác định. Vì vây, nếu một mẫu xảy ra là một chuỗi con của một mẫu dài hơn, bạn cần đảm bảo rằng mẫu dài hơn đi trước.
+Ví dụ:
+LT = r'(?P<LT><)'
+LE = r'(?P<LE><=)'
+EQ = r'(?P<EQ>=)'
+
+master_pat = re.compile('|'.join([LE, LT, EQ]))    # Correct
+# master_pat = re.compile('|'.join([LT, LE, EQ]))  # Incorrect
+Mẫu thứ 2 là sai bởi vì nó sẽ khớp với văn bản <= như token LT theo sau là EQ, không  phải là token LE, như mong muốn.
+Cuối cùng, nhưng không kém phần quan trọng, bạn cần chú ý đến các mẫu hình thành chuỗic con.
+Ví dụ, giả sử bạn có 2 mẫu như thế này:
+PRINT = r'(P<PRINT>print)'
+NAME  = r'(P<NAME>[a-zA-Z_][a-zA-Z_0-9]*)'
+
+master_pat = re.compile('|'.join([PRINT, NAME]))
+
+for tok in generate_tokens(master_pat, 'printer'):
+    print(tok)
+
+# Outputs :
+#  Token(type='PRINT', value='print')
+#  Token(type='NAME', value='er')
+
+Đối với nhiều loại tokenizing nâng cao hơn, bạn có thể muốn kiểm tra các gói như PyParsing(https://site-closed.wikispaces.com/)  hoặc PLY(http://www.dabeaz.com/ply/index.html). Một ví dụ liên quan đến PLY được nói đến trong recipe tiếp theo.
+
+2.19. Writing a Simple Recursive Descent Parser
+Problem:
+Bạn cần phân tích cú pháp văn bản theo một bộ quy tắc ngữ pháp và thực thi các hành động hoặc xây dựng một cây cú pháp ảo biểu thị cho đầu vào. Ngữ pháp là nhỏ, vì vậy bạn chỉ thích viết trình phân tích cú pháp của chính bạn trái ngược với việc sử dụng một số loại framework.
+
+Solution:
+Trong vấn đề này, chúng ta sẽ tập trung vào vấn đề phân tích cú pháp văn bản theo một ngữ pháp cụ thể. Để làm điều này, bạn nên bắt đầu bởi một đặc điểm chính của ngữ pháp trong định dạng một BNF hoặc EBNF.
+Ví dụ, một ngữ pháp cho các biểu thức toán học đơn giản có thể nhìn như thế này:
+   expr ::= expr + term
+         |   expr - term
+         |   term
+
+    term ::= term * factor
+         |   term / factor
+         |   factor
+
+    factor ::= ( expr )
+           |   NUM
+Hoặc cách khác, trong định dạng EBNF:
+   expr ::= term { (+|-) term }*
+
+    term ::= factor { (*|/) factor }*
+
+    factor ::= ( expr )
+           |   NUM
+
+Trong một EBNF, các phần của một công thức trong { … }* là tuỳ chọn. Dấu * có nghĩa là 0 hoặc nhiều lần lặp lại (nghĩa tương tự như trong một biểu thức chính quy).
+Bây giờ, nếu bạn không quen với cơ chế làm việc với một BNF, hãy nghĩ về nó như một đặc điểm kỹ thuật của việc thay thế hoặc công thức thay thế nơi các ký tự ở phía bên trái có thể được thay thế bởi các ký tự bên phải hoặc ngược lại. Nhìn chung, những gì xảy ra trong suốt quá trình phân tích cú pháp là bạn cố gắng khớp văn bản đầu vào với ngữ pháp bằng cách thực hiện nhiều thay thế và mở rộng bằng cách sử dụng BNF. Để minh hoạ, giả sử bạn đang phân tích cú pháp một biểu thức chẳng hạn như 3 + 4 * 5. Biểu thức này sẽ cần được chia nhỏ thành một dòng token trước, bằng cách sử dụng các kỹ thuật được mô tả trong recipe 2.18. Kết quả có thể là một chuỗi tokens như thế này:
+   NUM + NUM * NUM
+Từ đó, việc phân tích cú pháp liên quan đến việc khớp ngữ pháp để nhập đầu vào các tokens bằng cách thay thế:
+    expr
+    expr ::= term { (+|-) term }*
+    expr ::= factor { (*|/) factor }* { (+|-) term }*
+    expr ::= NUM { (*|/) factor }* { (+|-) term }*
+    expr ::= NUM { (+|-) term }*
+    expr ::= NUM + term { (+|-) term }*
+    expr ::= NUM + factor { (*|/) factor }* { (+|-) term }*
+    expr ::= NUM + NUM { (*|/) factor}* { (+|-) term }*
+    expr ::= NUM + NUM * factor { (*|/) factor }* { (+|-) term }*
+    expr ::= NUM + NUM * NUM { (*|/) factor }* { (+|-) term }*
+    expr ::= NUM + NUM * NUM { (+|-) term }*
+    expr ::= NUM + NUM * NUM
+
+Đầu tiên nhập vào là một NUM, vì vậy việc thay thế đầu tiên tập trung vào việc matching với phần đó. Một khi đã matched, chú ý di chuyển đến token tiếp theo của + và v.v… Các phần nhất định của phía bên tay phải ( ví dụ, { (*/) factor }*) biến mất khi nó được xác định rằng chúng không thể khớp với token tiếp theo. Trong một phân tích cú pháp thành công, mục phía bên tay phải được mở rộng hoàn toàn để khớp với đầu vào token.
+Với tất cả background tại chỗ, đây là một recipe đơn giản hiển thị cách để build một bộ đánh giá biểu thức gốc đệ quy:
+import re
+import collections
+
+# Token specification
+NUM    = r'(?P<NUM>\d+)'
+PLUS   = r'(?P<PLUS>\+)'
+MINUS  = r'(?P<MINUS>-)'
+TIMES  = r'(?P<TIMES>\*)'
+DIVIDE = r'(?P<DIVIDE>/)'
+LPAREN = r'(?P<LPAREN>\()'
+RPAREN = r'(?P<RPAREN>\))'
+WS     = r'(?P<WS>\s+)'
+
+master_pat = re.compile('|'.join([NUM, PLUS, MINUS, TIMES,
+                                  DIVIDE, LPAREN, RPAREN, WS]))
+
+# Tokenizer
+Token = collections.namedtuple('Token', ['type','value'])
+
+def generate_tokens(text):
+    scanner = master_pat.scanner(text)
+    for m in iter(scanner.match, None):
+        tok = Token(m.lastgroup, m.group())
+        if tok.type != 'WS':
+            yield tok
+
+# Parser
+class ExpressionEvaluator:
+    '''
+    Implementation of a recursive descent parser.   Each method
+    implements a single grammar rule.  Use the ._accept() method
+    to test and accept the current lookahead token.  Use the ._expect()
+    method to exactly match and discard the next token on the input
+    (or raise a SyntaxError if it doesn't match).
+    '''
+
+    def parse(self,text):
+        self.tokens = generate_tokens(text)
+        self.tok = None             # Last symbol consumed
+        self.nexttok = None         # Next symbol tokenized
+        self._advance()             # Load first lookahead token
+        return self.expr()
+
+    def _advance(self):
+        'Advance one token ahead'
+        self.tok, self.nexttok = self.nexttok, next(self.tokens, None)
+
+    def _accept(self,toktype):
+        'Test and consume the next token if it matches toktype'
+        if self.nexttok and self.nexttok.type == toktype:
+            self._advance()
+            return True
+        else:
+            return False
+
+    def _expect(self,toktype):
+        'Consume next token if it matches toktype or raise SyntaxError'
+        if not self._accept(toktype):
+            raise SyntaxError('Expected ' + toktype)
+
+    # Grammar rules follow
+
+    def expr(self):
+        "expression ::= term { ('+'|'-') term }*"
+
+        exprval = self.term()
+        while self._accept('PLUS') or self._accept('MINUS'):
+            op = self.tok.type
+            right = self.term()
+            if op == 'PLUS':
+                exprval += right
+            elif op == 'MINUS':
+                exprval -= right
+        return exprval
+
+    def term(self):
+        "term ::= factor { ('*'|'/') factor }*"
+
+        termval = self.factor()
+        while self._accept('TIMES') or self._accept('DIVIDE'):
+            op = self.tok.type
+            right = self.factor()
+            if op == 'TIMES':
+                termval *= right
+            elif op == 'DIVIDE':
+                termval /= right
+        return termval
+
+    def factor(self):
+        "factor ::= NUM | ( expr )"
+
+        if self._accept('NUM'):
+            return int(self.tok.value)
+        elif self._accept('LPAREN'):
+            exprval = self.expr()
+            self._expect('RPAREN')
+            return exprval
+        else:
+            raise SyntaxError('Expected NUMBER or LPAREN')
+
+Đây là một ví dụ về cách sử dụng lớp ExpressionEvaluator tương tác:
+>>> e = ExpressionEvaluator()
+>>> e.parse('2')
+2
+>>> e.parse('2 + 3')
+5
+>>> e.parse('2 + 3 * 4')
+14
+>>> e.parse('2 + (3 + 4) * 5')
+37
+>>> e.parse('2 + (3 + * 4)')
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "exprparse.py", line 40, in parse
+    return self.expr()
+  File "exprparse.py", line 67, in expr
+    right = self.term()
+  File "exprparse.py", line 77, in term
+    termval = self.factor()
+  File "exprparse.py", line 93, in factor
+    exprval = self.expr()
+  File "exprparse.py", line 67, in expr
+    right = self.term()
+  File "exprparse.py", line 77, in term
+    termval = self.factor()
+  File "exprparse.py", line 97, in factor
+    raise SyntaxError("Expected NUMBER or LPAREN")
+SyntaxError: Expected NUMBER or LPAREN
+>>>
+Nếu bạn muốn làm điều gì đó hơn là đánh giá thuần tuý, bạn cần thay đổi lớp ExpressionEvaluator để làm điều gì đó khác.
+Ví dụ, đây là một thực thi thay thế mà cấu trúc một cây phân tích cú pháp đơn giản:
+class ExpressionTreeBuilder(ExpressionEvaluator):
+    def expr(self):
+        "expression ::= term { ('+'|'-') term }"
+
+        exprval = self.term()
+        while self._accept('PLUS') or self._accept('MINUS'):
+            op = self.tok.type
+            right = self.term()
+            if op == 'PLUS':
+                exprval = ('+', exprval, right)
+            elif op == 'MINUS':
+                exprval = ('-', exprval, right)
+        return exprval
+
+    def term(self):
+        "term ::= factor { ('*'|'/') factor }"
+
+        termval = self.factor()
+        while self._accept('TIMES') or self._accept('DIVIDE'):
+            op = self.tok.type
+            right = self.factor()
+            if op == 'TIMES':
+                termval = ('*', termval, right)
+            elif op == 'DIVIDE':
+                termval = ('/', termval, right)
+        return termval
+
+    def factor(self):
+        'factor ::= NUM | ( expr )'
+
+        if self._accept('NUM'):
+            return int(self.tok.value)
+        elif self._accept('LPAREN'):
+            exprval = self.expr()
+            self._expect('RPAREN')
+            return exprval
+        else:
+            raise SyntaxError('Expected NUMBER or LPAREN')
+The following example shows how it works:
+>>> e = ExpressionTreeBuilder()
+>>> e.parse('2 + 3')
+('+', 2, 3)
+>>> e.parse('2 + 3 * 4')
+('+', 2, ('*', 3, 4))
+>>> e.parse('2 + (3 + 4) * 5')
+('+', 2, ('*', ('+', 3, 4), 5))
+>>> e.parse('2 + 3 + 4')
+('+', ('+', 2, 3), 4)
+>>>
+
+Discussion:
+Việc phân tích cú pháp là một chủ đề lớn mà thường chiếm thời gian 3 tuần đầu học một khoá biên dịch. Nếu bạn đang tìm kiếm kiến thức nền tảng về các ngữ pháp, thuật toán phân tích cú pháp, và các thông tin khác, một cuốn sách về trình biên dịch là nơi bạn nên tìm đến. Không cần phải nói, tất cả những điều đó không cần lặp lại ở đây.
+Tuy nhiên, ý tưởng tổng thể của việc viết một trình phân tích cú pháp gốc đệ quy nhìn chung là đơn giản. Để bắt đầu, bạn hãy mang mỗi công thức ngữ pháp và biến nó thành một hàm hoặc phương thức.
+Vì vậy nếu ngữ pháp của bạn trông như thế này:
+   expr ::= term { ('+'|'-') term }*
+
+    term ::= factor { ('*'|'/') factor }*
+
+    factor ::= '(' expr ')'
+           |   NUM
+Bạn có thể bắt đầu biến nó thành một bộ các phương thức như thế này:
+class ExpressionEvaluator:
+    ...
+    def expr(self):
+        ...
+
+    def term(self):
+        ...
+
+    def factor(self):
+        ...
+
+Nhiệm vụ của mỗi phương thức là đơn giản - nó phải đi từ trái qua phải trên mỗi phần của quy tắc ngữ pháp, consuming các tokens trong quá trình xử lý. Theo một nghĩa nào đó, mục đích của phương thức là để consuming các quy tắc hoặc tạo ra một cú pháp lỗi nếu gặp bế tắc. Để làm điều này, kỹ thuật thực thi dưới đây được áp dụng:
+Nếu ký tự tiếp theo trong công thức là tên của quy tắc ngữ pháp khác (ví dụ, term hoặc factor), bạn đơn giản gọi phương thức với tên tương tự. Đây là phần gốc của thuật toán - kiểm soát các quy tắc khác. Thỉnh thoảng các công thức này sẽ liên quan đến các cuộc gọi đến các phương thức mà đã thực thi rồi ( ví dụ, lời gọi đến expr trong công thức factor ::= '(' expr ')' ). Đây là phần đệ quy của thuật toán.
+Nếu ký tự tiếp theo trong công thức phải là một ký tự đặc biệt (ví dụ, ‘(‘ ), bạn nhìn vào ký tự tiếp theo và kiểm tra một match chính xác. Nếu nó không khớp, đó là lỗi cú pháp. Phương thức _expect() trong recipe này được sử dụng để thực thi những bước này.
+Nếu ký tự tiếp theo trong công thức có thể là một vài lựa chọn (ví dụ, + hoặc - ), bạn phải kiểm tra token tiếp theo cho mỗi khả năng và chỉ nâng cao nếu khớp được thực hiện. Đây là mục đích của phương thức _accept() trong recipe này. Nó giống như một phiên bản yếu hơn của phương thức _expect() trong đó nó sẽ nâng cao nếu một match được tạo ra, hoặc nếu không, nó đơn giản quay lại mà không đưa ra một lỗi nào.
+Đối với các quy tắc ngữ pháp nơi có các phần được lặp lại (ví dụ, chẳng hạn trong công thức expr :: = term { (‘+’|’-’) term }*), việc lặp lại được thực hiện bởi một vòng lặp while. Phần thân của vòng lặp sẽ thường sưu tập hoặc xử lý tất cả các items cho đến khi không tìm thấy.
+Một khi một mục quy tắc ngữ pháp được sử dụng, mỗi phương thức trả về một số loại kết quả quay lại cho người gọi. Đây là cách các giá trị truyền trong suốt quá trình phân tích cú pháp. Ví dụ, trong biểu thức đánh giá, trả về các giá trị sẽ biểu thị một phần kết quả của biểu thức được phân tích cú pháp. Cuối cùng tất cả chúng được kết hợp cùng nhau trong topmost quy tắc ngữ pháp thực thi.
+Mặc dù một ví dụ đơn giản được hiển thị, trình phân tích cú pháp gốc đệ quy có thể được sử dụng để thực thi các trình phân tích cú pháp phức tạp hơn. Ví dụ, chính mã nguồn Python được thông dịch bởi một trình phân tích cú pháp gốc đệ quy. Nếu bạn quá inclined, bạn có thể nhìn vào ngữ pháp cơ bản bằng cách kiểm tra file Grammar/Grammar trong mã nguồn Python. Điều đó nói rằng vẫn còn nhiều cạm bẫy và hạn chế với việc tạo trình phân tích cú pháp bằng tay.
+Một hạn chế như vậy của trình phân tích cú pháp gốc đệ quy là chúng không thể được viết cho các quy tắc ngữ pháp liên quan đến bất kỳ loại đệ quy còn lại.
+Ví dụ, giả sử bạn cần dịch một công thức như thế này:
+  items ::= items ',' item
+           |  item
+Để làm điều này bạn có thể sử dụng phương thức items() như thế này:
+def items(self):
+    itemsval = self.items()
+    if itemsval and self._accept(','):
+         itemsval.append(self.item())
+    else:
+         itemsval = [ self.item() ]
+Vấn đề duy nhất là nó không hoạt động. Trên thực tế, nó sinh ra một lỗi đệ quy vô hạn.
+Bạn cũng có thể gặp phải các vấn đề phức tạp liên quan đến chính các quy tắc ngữ pháp của chúng.
+Ví dụ, bạn có thể tự hỏi liệu các biểu thức có thể được mô tả bằng ngữ pháp đơn giản hơn:
+   expr ::= factor { ('+'|'-'|'*'|'/') factor }*
+
+    factor ::= '(' expression ')'
+           |   NUM
+Kỹ thuật ngữ pháp này hoạt động nhưng nó không quan sát các quy ước chuẩn toán học liên quan đến thứ tự đánh giá. Ví dụ, biểu thức “3 + 4 * 5” sẽ được đánh giá là “35” thay vì kết qủa như mong muốn là “23”. Việc sử dụng tách biệt các công thức “expr" và “term" là để thực hiện các đánh giá hoạt động đúng.
+Đối với các ngữ pháp thực sự phức tạp, bạn thường sử dụng các công cụ phân tích cú pháp tốt hơn, chẳng hạn như PyParsing hoặc PLY. Điều này là những gì mã nguồn biểu thức đánh giá nhìn giống như sử dụng PLY:
+from ply.lex import lex
+from ply.yacc import yacc
+
+# Token list
+tokens = [ 'NUM', 'PLUS', 'MINUS', 'TIMES', 'DIVIDE', 'LPAREN', 'RPAREN' ]
+
+# Ignored characters
+
+t_ignore = ' \t\n'
+
+# Token specifications (as regexs)
+t_PLUS   = r'\+'
+t_MINUS  = r'-'
+t_TIMES  = r'\*'
+t_DIVIDE = r'/'
+t_LPAREN = r'\('
+t_RPAREN = r'\)'
+
+# Token processing functions
+def t_NUM(t):
+    r'\d+'
+    t.value = int(t.value)
+    return t
+
+# Error handler
+def t_error(t):
+    print('Bad character: {!r}'.format(t.value[0]))
+    t.skip(1)
+
+# Build the lexer
+lexer = lex()
+
+# Grammar rules and handler functions
+def p_expr(p):
+    '''
+    expr : expr PLUS term
+         | expr MINUS term
+    '''
+    if p[2] == '+':
+        p[0] = p[1] + p[3]
+    elif p[2] == '-':
+        p[0] = p[1] - p[3]
+
+def p_expr_term(p):
+    '''
+    expr : term
+    '''
+    p[0] = p[1]
+
+def p_term(p):
+    '''
+    term : term TIMES factor
+         | term DIVIDE factor
+    '''
+    if p[2] == '*':
+        p[0] = p[1] * p[3]
+    elif p[2] == '/':
+        p[0] = p[1] / p[3]
+
+def p_term_factor(p):
+    '''
+    term : factor
+    '''
+    p[0] = p[1]
+
+def p_factor(p):
+    '''
+    factor : NUM
+    '''
+    p[0] = p[1]
+
+def p_factor_group(p):
+    '''
+    factor : LPAREN expr RPAREN
+    '''
+    p[0] = p[2]
+
+def p_error(p):
+    print('Syntax error')
+
+parser = yacc()
+Trong mã nguồn này, bạn sẽ tìm thấy mọi thứ được xác định tại một level cao hơn. Bạn đơn giản viết biểu thức chính quy cho các tokens và các hàm xử lý cấp cao mà thực thi khi nhiều quy ước ngữ pháp được khớp. Cơ chế thực sự của việc chạy trình phân tích cú pháp, chấp nhận các tokens và v.v… được thực hiện hoàn toàn bởi thư viện.
+Đây là một ví dụ về cách kết quả đối tượng trình phân tích cú pháp được sử dụng:
+>>> parser.parse('2')
+2
+>>> parser.parse('2+3')
+5
+>>> parser.parse('2+(3+4)*5')
+37
+>>>
+Nếu bạn cần một chút hứng thú trong chương trình của bạn, viết trình phân tích cú pháp và trình biên dịch có thể là một dự án thú vị. Một lần nữa, một sách giáo khoa trình biên dịch sẽ có nhiều chi tiết lý thuyết cơ bản hơn. Tuy nhiên, nhiều tài nguyên tốt có thể được tìm thấy trực tuyến. Module ast của chính Python cũng đáng để xem.
+
+2.20. Performing Text Operations on Byte Strings
+Problem:
+Bạn muốn thực thi các thao tác văn bản phổ biến trên các chuỗi byte.
+
+Solution:
+Chuỗi byte đã hỗ trợ hầu hết các hàm xây dựng sẵn các thao tác giống như chuỗi text rồi.
+Ví dụ:
+>>> data = b'Hello World'
+>>> data[0:5]
+b'Hello'
+>>> data.startswith(b'Hello')
+True
+>>> data.split()
+[b'Hello', b'World']
+>>> data.replace(b'Hello', b'Hello Cruel')
+b'Hello Cruel World'
+>>>
+
+Các thao tác này cũng hoạt động với các mảng byte. Ví dụ:
+>>> data = bytearray(b'Hello World')
+>>> data[0:5]
+bytearray(b'Hello')
+>>> data.startswith(b'Hello')
+True
+>>> data.split()
+[bytearray(b'Hello'), bytearray(b'World')]
+>>> data.replace(b'Hello', b'Hello Cruel')
+bytearray(b'Hello Cruel World')
+>>>
+Bạn có thể áp dụng các mẫu matching biểu thức chính quy cho chuỗi byte, nhưng các mẫu tự cần được chỉ định là bytes.
+Ví dụ:
+>>>
+>>> data = b'FOO:BAR,SPAM'
+>>> import re
+>>> re.split('[:,]',data)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+  File "/usr/local/lib/python3.3/re.py", line 191, in split
+    return _compile(pattern, flags).split(string, maxsplit)
+TypeError: can't use a string pattern on a bytes-like object
+
+>>> re.split(b'[:,]',data)     # Notice: pattern as bytes
+[b'FOO', b'BAR', b'SPAM']
+>>>
+
+
+Discussion:
+Đối với hầu hết các phần, hầu như tất cả các thao tác có sẵn trong chuỗi text sẽ hoạt động trên các chuỗi byte. Tuy nhiên, có một số điểm khác nhau đáng chú ý để đảm bảo. Đầu tiên, việc đánh chỉ mục các chuỗi byte tạo ra các số nguyên, không phải các ký tự riêng lẻ.
+Ví dụ:
+>>> a = 'Hello World'     # Text string
+>>> a[0]
+'H'
+>>> a[1]
+'e'
+>>> b = b'Hello World'    # Byte string
+>>> b[0]
+72
+>>> b[1]
+101
+>>>
+Điểm khác nhau này trong ngữ nghĩa có thể ảnh hưởng đến chương trình mà cố gắng xử lý dữ liệu hướng byte trên cơ sở từng kú tự.
+Thứ hai, các chuỗi byte không cung cấp một chuỗi tốt biểu thị và không in rõ ràng trừ khi được giải mã trước thành chuỗi văn bản.
+Ví dụ:
+>>> s = b'Hello World'
+>>> print(s)
+b'Hello World'               # Observe b'...'
+>>> print(s.decode('ascii'))
+Hello World
+>>>
+Tương tự, không có thao tác định dạng chuỗi có sẵn cho chuỗi byte.
+>>> b'%10s %10d %10.2f' % (b'ACME', 100, 490.1)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+TypeError: unsupported operand type(s) for %: 'bytes' and 'tuple'
+
+>>> b'{} {} {}'.format(b'ACME', 100, 490.1)
+Traceback (most recent call last):
+  File "<stdin>", line 1, in <module>
+AttributeError: 'bytes' object has no attribute 'format'
+>>>
+Nếu bạn muốn làm điều bất kỳ loại định dạng nào trên chuỗi byte, nên làm bằng cách sử dụng chuỗi text bình thường và mã hoá.
+Ví dụ:
+>>> '{:10s} {:10d} {:10.2f}'.format('ACME', 100, 490.1).encode('ascii')
+b'ACME              100     490.10'
+>>>
+Cuối cùng, bạn cần đảm bảo rằng bằng cách sử dụng một chuỗi byte có thể thay đổi ngữ nghĩa của các thao tác nhất định - thường liên quan đến file hệ thống.
+Ví dụ, nếu bạn cung cấp một tên file đã mã hoá như các bytes thay vì một chuỗi text, nó thường disables việc mã hoá/giải mã tên file.
+Ví dụ:
+>>> # Write a UTF-8 filename
+>>> with open('jalape\xf1o.txt', 'w') as f:
+...    f.write('spicy')
+...
+
+>>> # Get a directory listing
+>>> import os
+>>> os.listdir('.')          # Text string (names are decoded)
+['jalapeño.txt']
+
+>>> os.listdir(b'.')         # Byte string (names left as bytes)
+[b'jalapen\xcc\x83o.txt']
+>>>
+Lưu ý, trong phần cuối của ví dụ này cách cho một chuỗi byte như tên thư mục dẫn đến kết quả tên file được trả về dưới dạng bytes chưa được mã hoá. Tên file được hiển thị trong danh sách thư mục bao gồm mã hoá UTF-8 thô. Xem recipe 5.15 cho các vấn đề liên quan đến tên file.
