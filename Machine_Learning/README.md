@@ -6,7 +6,7 @@ Học máy có liên quan lớn đến thống kê, vì cả hai lĩnh vực đ�
 Nhiều bài toán suy luận được xếp vào loại bài toán [NP-khó](https://en.wikipedia.org/wiki/NP-hardness), vì thế một phần của học máy là nghiên cứu sự phát triển các giải thuật suy luận xấp xỉ mà có thể xử lý được.
 
 Trong series này, chúng tôi sẽ giới thiệu các vấn đề học máy từ đơn giản đến phức tạp.
-Phần lớn tham khảo dựa trên cuốn [Artificial Intelligence for Human](https://g.co/kgs/Nft6ku) của tác giả [Jeff Heaton](PhD)(https://g.co/kgs/2DDvtB), 
+Phần lớn tham khảo dựa trên cuốn [Artificial Intelligence for Human](https://g.co/kgs/Nft6ku) của tác giả [Jeff Heaton](https://g.co/kgs/2DDvtB)(PhD), 
 [bài giảng](http://is.hust.edu.vn/~khoattq/lectures/) của thầy [Khoattq](http://is.hust.edu.vn/~khoattq/)(PhD) Đại học Bách Khoa Hà Nội,
 blog [machinelearningcoban](http://machinelearningcoban.com) của anh Tiepvuhuu(PhD). 
 
