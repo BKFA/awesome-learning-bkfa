@@ -6,13 +6,23 @@ Học máy có liên quan lớn đến thống kê, vì cả hai lĩnh vực đ�
 Nhiều bài toán suy luận được xếp vào loại bài toán [NP-khó](https://en.wikipedia.org/wiki/NP-hardness), vì thế một phần của học máy là nghiên cứu sự phát triển các giải thuật suy luận xấp xỉ mà có thể xử lý được.
 
 Trong series này, chúng tôi sẽ giới thiệu các vấn đề học máy từ đơn giản đến phức tạp.
-Phần lớn tham khảo dựa trên cuốn [Artificial Intelligence for Human](https://g.co/kgs/Nft6ku) của tác giả [Jeff Heaton](https://g.co/kgs/2DDvtB), 
+Phần lớn tham khảo dựa trên cuốn [Artificial Intelligence for Human](https://g.co/kgs/Nft6ku) của tác giả [Jeff Heaton](PhD)(https://g.co/kgs/2DDvtB), 
 [bài giảng](http://is.hust.edu.vn/~khoattq/lectures/) của thầy [Khoattq](http://is.hust.edu.vn/~khoattq/)(PhD) Đại học Bách Khoa Hà Nội,
 blog [machinelearningcoban](http://machinelearningcoban.com) của anh Tiepvuhuu(PhD). 
 
 ## Mục lục:
-### Các vấn đề nhỏ trong học máy:
 ### Các giải thuật học máy cơ bản:
+1. Hồi quy tuyến tính (Linear regression)
+2. Phân cụm K-mean (K-mean clustering)
+3. K-nearest neighbor 
+4. Naive-Bayes
+5. Rừng ngẫu nhiên (Random forest)
+6. Support Vector Machine
+7. Perceptron
+8. Đánh giá mô hình học máy
 ### Các giải thuật học máy cải tiến:
+
 ### Toán cơ bản:
-### Câu chuyện ngoài đời liên quan đến học máy:
+1. Bias and variance
+
+### Câu chuyện học máy:
